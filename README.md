@@ -101,19 +101,35 @@ RAGTutorial/
 - Structured LLM outputs
 - Building more flexible RAG systems
 
-### Bonus: Ollama Integration (if time permits)
+### Bonus: Ollama Integration
 
 **Objective:** Switch from OpenAI to local Ollama models.
 
 **Features:**
-- Local model setup
-- API compatibility layer
-- Performance considerations
+- Built-in support for switching between OpenAI and Ollama
+- Compatible with all examples using the OpenAI API-compatible endpoint
+- Support for Ollama embedding models in RAG examples
 
 **Key Concepts:**
 - Working with open-source models
-- API differences between providers
+- API compatibility between providers
 - Local vs. cloud deployment tradeoffs
+
+**Configuration:**
+All examples support both OpenAI and Ollama through environment variables:
+```
+# Set to false to use OpenAI (default is true)
+USE_OLLAMA=true
+
+# Base URL for Ollama API (default is http://localhost:11434)
+OLLAMA_BASE_URL=http://localhost:11434
+
+# Model name for completion (Ollama: llama3, mistral, etc. OpenAI: gpt-4o-mini, etc.)
+MODEL_NAME=llama3
+
+# For RAG examples, specify the embedding model when using Ollama
+EMBEDDING_MODEL_NAME=nomic-embed-text
+```
 
 ## Getting Started
 

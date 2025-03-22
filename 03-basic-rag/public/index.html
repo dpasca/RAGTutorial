@@ -143,8 +143,11 @@
               updateContextPanel(data.metadata.retrievedDocuments);
             }
           } else {
-            // Show error message
-            addMessageToChat(`Error: ${data.error || 'Unknown error'}`, 'error');
+            // Show detailed error message when available
+            const errorMessage = data.details
+              ? `Error: ${data.error} - ${data.details}`
+              : `Error: ${data.error || 'Unknown error'}`;
+            addMessageToChat(errorMessage, 'error');
           }
         } catch (error) {
           // Remove loading indicator
