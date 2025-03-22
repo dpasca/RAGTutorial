@@ -50,47 +50,6 @@
         chatHistory.scrollTop = chatHistory.scrollHeight;
       }
 
-      // Function to add a movie rating card to the chat history
-      function addMovieRatingCard(movieData) {
-        if (!movieData) return;
-
-        const cardElement = document.createElement('div');
-        cardElement.classList.add('message', 'assistant', 'movie-card');
-
-        // Create card content
-        let cardContent = '';
-
-        if (movieData.error) {
-          cardContent = `
-            <div class="movie-info">
-              <h3>${movieData.movieTitle}</h3>
-              <p class="error">${movieData.error}</p>
-            </div>
-          `;
-        } else {
-          const starRating = '★'.repeat(Math.round(movieData.rating / 2)) +
-                            '☆'.repeat(5 - Math.round(movieData.rating / 2));
-
-          cardContent = `
-            <div class="movie-info">
-              <h3>${movieData.movieTitle} (${movieData.year})</h3>
-              <div class="rating">
-                <span class="rating-stars">${starRating}</span>
-                <span class="rating-number">${movieData.rating}/10</span>
-              </div>
-              <p class="genres">${movieData.genres}</p>
-              ${movieData.note ? `<p class="note">${movieData.note}</p>` : ''}
-            </div>
-          `;
-        }
-
-        cardElement.innerHTML = cardContent;
-        chatHistory.appendChild(cardElement);
-
-        // Scroll to bottom of chat history
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-      }
-
       // Handle form submission
       chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -129,11 +88,6 @@
           if (response.ok) {
             // Add AI response to chat
             addMessageToChat(data.response, 'assistant');
-
-            // If function call data is available, show the movie card
-            if (data.functionCall && data.functionCall.name === "get_movie_rating") {
-              addMovieRatingCard(data.functionCall.result);
-            }
           } else {
             // Show detailed error message when available
             const errorMessage = data.details
