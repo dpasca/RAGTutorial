@@ -15,18 +15,32 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 //=======================================================
-// Initialize clients
-const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
-const modelName = process.env.MODEL_NAME || "qwen2.5:3b";
-const useOllama = process.env.USE_OLLAMA !== "false";
+function initializeClient()
+{
+  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+  const useOllama = process.env.USE_OLLAMA !== "false";
 
-// Initialize OpenAI client (works with Ollama too)
-const openai = new OpenAI({
-  baseURL: useOllama ? `${ollamaBaseUrl}/v1` : undefined,
-  apiKey: useOllama ? "ollama" : process.env.OPENAI_API_KEY,
-});
+  // Initialize OpenAI client (works with Ollama too)
+  return new OpenAI({
+    baseURL: useOllama ? `${ollamaBaseUrl}/v1` : undefined,
+    apiKey: useOllama ? "ollama" : process.env.OPENAI_API_KEY,
+  });
+}
 
+//=======================================================
+// Get model name from environment or use appropriate default
+function getModelName() {
+  const useOllama = process.env.USE_OLLAMA !== "false";
+  return process.env.MODEL_NAME || (useOllama ? "qwen2.5:3b" : "gpt-4o-mini");
+}
+
+//=======================================================
+// Initialize the client
+const openai = initializeClient();
+const modelName = getModelName();
+console.log(`Using model: ${modelName}`);
+
+//=======================================================
 // Function to create a local in-memory embeddings database
 let inMemoryVectorStore = {};
 
@@ -59,7 +73,7 @@ async function getEmbeddings(texts) {
 
   for (const text of texts) {
     const response = await openai.embeddings.create({
-      model: embeddingModel,
+      model: process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2",
       input: text,
     });
 
