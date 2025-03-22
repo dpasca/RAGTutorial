@@ -7,53 +7,50 @@ const { OpenAI } = require('openai');
 const app = express();
 const port = 3000;
 
+//=======================================================
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+//=======================================================
 // Initialize LLM client based on environment variables
-function initializeClient() {
-  // Check if using Ollama or OpenAI
-  const useOllama = process.env.USE_OLLAMA !== "false"; // Default to true
-
-  if (useOllama) {
-    // Use OpenAI client with Ollama's OpenAI-compatible endpoint
+function initializeClient()
+{
+  // Here we use OpenAI client, also for Ollama
+  params = {};
+  if (process.env.USE_OLLAMA !== "false")
+  {
+    console.log("Using Ollama. Make sure Ollama is running on your machine.");
+    // Need to specify the base URL for Ollama
     const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-    const apiBase = `${ollamaBaseUrl}/v1`;
-
-    console.log(`Using Ollama's OpenAI-compatible API at: ${apiBase}`);
-
-    return new OpenAI({
-      baseURL: apiBase,
-      apiKey: "ollama", // Any non-empty string works as Ollama doesn't check the API key
-    });
-  } else {
-    // Standard OpenAI client
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (!apiKey) {
-      console.warn("Warning: OPENAI_API_KEY not found but USE_OLLAMA=false. Check your .env file.");
-    }
-
-    console.log("Using OpenAI API");
-
-    return new OpenAI({
-      apiKey: apiKey,
-    });
+    params = {
+      baseURL: `${ollamaBaseUrl}/v1`,
+      apiKey: "ollama", // Any non-empty string is fine here
+    };
   }
+  else
+  {
+    console.log("Using OpenAI. Make sure you have set your OPENAI_API_KEY in the .env file.");
+    params = {apiKey: process.env.OPENAI_API_KEY};
+  }
+  // Return the OpenAI client
+  return new OpenAI(params);
 }
 
+//=======================================================
 // Get model name from environment or use appropriate default
 function getModelName() {
   const useOllama = process.env.USE_OLLAMA !== "false";
-  return process.env.MODEL_NAME || (useOllama ? "llama3" : "gpt-4o-mini");
+  return process.env.MODEL_NAME || (useOllama ? "qwen2.5:7b" : "gpt-4o-mini");
 }
 
+//=======================================================
 // Initialize the client
 const openai = initializeClient();
 const modelName = getModelName();
 console.log(`Using model: ${modelName}`);
 
+//=======================================================
 // API endpoint for chat
 app.post('/api/chat', async (req, res) => {
   try {
@@ -67,7 +64,6 @@ app.post('/api/chat', async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: modelName,
       messages: [{ role: "user", content: message }],
-      max_tokens: 500,
       temperature: 0.7,
     });
 
@@ -83,15 +79,8 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+//=======================================================
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
-
-  // Print appropriate configuration message
-  const useOllama = process.env.USE_OLLAMA !== "false";
-  if (useOllama) {
-    console.log('Using Ollama. Make sure Ollama is running on your machine.');
-  } else {
-    console.log('Using OpenAI. Make sure you have set your OPENAI_API_KEY in the .env file.');
-  }
 });

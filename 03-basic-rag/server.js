@@ -15,112 +15,103 @@ const {
 const app = express();
 const port = 3000;
 
+//=======================================================
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+//=======================================================
 // Initialize LLM client based on environment variables
-function initializeClient() {
-  // Check if using Ollama or OpenAI
-  const useOllama = process.env.USE_OLLAMA !== "false"; // Default to true
-
-  if (useOllama) {
-    // Use OpenAI client with Ollama's OpenAI-compatible endpoint
+function initializeClient()
+{
+  // Here we use OpenAI client, also for Ollama
+  params = {};
+  if (process.env.USE_OLLAMA !== "false")
+  {
+    console.log("Using Ollama. Make sure Ollama is running on your machine.");
+    // Need to specify the base URL for Ollama
     const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-    const apiBase = `${ollamaBaseUrl}/v1`;
-
-    console.log(`Using Ollama's OpenAI-compatible API at: ${apiBase}`);
-
-    return new OpenAI({
-      baseURL: apiBase,
-      apiKey: "ollama", // Any non-empty string works as Ollama doesn't check the API key
-    });
-  } else {
-    // Standard OpenAI client
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (!apiKey) {
-      console.warn("Warning: OPENAI_API_KEY not found but USE_OLLAMA=false. Check your .env file.");
-    }
-
-    console.log("Using OpenAI API");
-
-    return new OpenAI({
-      apiKey: apiKey,
-    });
+    params = {
+      baseURL: `${ollamaBaseUrl}/v1`,
+      apiKey: "ollama", // Any non-empty string is fine here
+    };
   }
+  else
+  {
+    console.log("Using OpenAI. Make sure you have set your OPENAI_API_KEY in the .env file.");
+    params = {apiKey: process.env.OPENAI_API_KEY};
+  }
+  // Return the OpenAI client
+  return new OpenAI(params);
 }
 
+//=======================================================
 // Get model name from environment or use appropriate default
 function getModelName() {
   const useOllama = process.env.USE_OLLAMA !== "false";
   return process.env.MODEL_NAME || (useOllama ? "llama3" : "gpt-4o-mini");
 }
 
+//=======================================================
 // Initialize the client
 const openai = initializeClient();
 const modelName = getModelName();
 console.log(`Using model: ${modelName}`);
 
 // Set up LlamaIndex
-let index; // Will hold our document index
+let _index; // Will hold our document index
 
+//=======================================================
 // Function to initialize the index
-async function initializeIndex() {
-  try {
-    console.log('Initializing document index...');
+async function initializeIndex()
+{
+  console.log('Initializing document index...');
 
-    const useOllama = process.env.USE_OLLAMA !== "false";
-    const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+  const useOllama = process.env.USE_OLLAMA !== "false";
+  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 
-    // Configure service context based on provider
-    let serviceContextConfig = {
-      llm: {
-        model: modelName,
-        temperature: 0.7,
-      }
-    };
-
-    // Set up the embedding model and LLM configuration based on provider
-    if (useOllama) {
-      // For Ollama
-      const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "nomic-embed-text";
-      console.log(`Using Ollama embedding model: ${embeddingModel}`);
-
-      serviceContextConfig.llm.baseUrl = `${ollamaBaseUrl}/v1`;
-      serviceContextConfig.embedModel = new OllamaEmbedding({
-        modelName: embeddingModel,
-        baseUrl: ollamaBaseUrl
-      });
-    } else {
-      // For OpenAI
-      console.log('Using OpenAI embeddings');
-
-      if (!process.env.OPENAI_API_KEY) {
-        console.warn("Warning: OPENAI_API_KEY not found but USE_OLLAMA=false. Embeddings may fail.");
-      }
-
-      serviceContextConfig.llm.apiKey = process.env.OPENAI_API_KEY;
-      serviceContextConfig.embedModel = new OpenAIEmbedding({
-        apiKey: process.env.OPENAI_API_KEY
-      });
+  // Configure service context based on provider
+  let serviceContextConfig = {
+    llm: {
+      model: modelName,
+      temperature: 0.7,
     }
+  };
 
-    const serviceContext = serviceContextFromDefaults(serviceContextConfig);
+  // Set up the embedding model and LLM configuration based on provider
+  if (useOllama) {
+    // For Ollama
+    const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "nomic-embed-text";
+    console.log(`Using Ollama embedding model: ${embeddingModel}`);
 
-    // Read documents from the docs directory
-    const reader = new SimpleDirectoryReader();
-    const documents = await reader.loadData('../docs');
-    console.log(`Loaded ${documents.length} documents`);
+    serviceContextConfig.llm.baseUrl = `${ollamaBaseUrl}/v1`;
+    serviceContextConfig.embedModel = new OllamaEmbedding({
+      modelName: embeddingModel,
+      baseUrl: ollamaBaseUrl
+    });
+  } else {
+    // For OpenAI
+    console.log('Using OpenAI embeddings');
 
-    // Create a vector store index from the documents
-    index = await VectorStoreIndex.fromDocuments(documents, { serviceContext });
-    console.log('Index created successfully');
-  } catch (error) {
-    console.error('Error initializing index:', error);
+    serviceContextConfig.llm.apiKey = process.env.OPENAI_API_KEY;
+    serviceContextConfig.embedModel = new OpenAIEmbedding({
+      apiKey: process.env.OPENAI_API_KEY
+    });
   }
+
+  const serviceContext = serviceContextFromDefaults(serviceContextConfig);
+
+  // Read documents from the docs directory
+  const reader = new SimpleDirectoryReader();
+  const documents = await reader.loadData('../docs');
+  console.log(`Loaded ${documents.length} documents`);
+
+  // Create a vector store index from the documents
+  _index = await VectorStoreIndex.fromDocuments(documents, { serviceContext });
+  console.log('Index created successfully');
 }
 
+//=======================================================
 // API endpoint for RAG-based chat
 app.post('/api/chat', async (req, res) => {
   try {
@@ -131,14 +122,14 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Make sure index is initialized
-    if (!index) {
+    if (!_index) {
       return res.status(503).json({
         error: 'Document index is still initializing. Please try again in a moment.'
       });
     }
 
     // Perform retrieval to get relevant context
-    const queryEngine = index.asQueryEngine();
+    const queryEngine = _index.asQueryEngine();
     const retrievalResult = await queryEngine.query(message);
 
     // Get the text from the nodes that were retrieved
@@ -162,7 +153,6 @@ User question: ${message}
     const completion = await openai.chat.completions.create({
       model: modelName,
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 500,
       temperature: 0.7,
     });
 
@@ -187,17 +177,14 @@ User question: ${message}
   }
 });
 
+//=======================================================
 // Start the server and initialize the index
 app.listen(port, async () => {
   console.log(`Server is running at http://localhost:${port}`);
 
-  // Print appropriate configuration message
-  const useOllama = process.env.USE_OLLAMA !== "false";
-  if (useOllama) {
-    console.log('Using Ollama. Make sure Ollama is running on your machine.');
-  } else {
-    console.log('Using OpenAI. Make sure you have set your OPENAI_API_KEY in the .env file.');
+  try {
+    await initializeIndex();
+  } catch (error) {
+    console.error('Error initializing index:', error);
   }
-
-  await initializeIndex();
 });
