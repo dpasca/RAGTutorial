@@ -69,41 +69,24 @@ async function initializeIndex()
 
   const useOllama = process.env.USE_OLLAMA !== "false";
   const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+  const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
 
-  // Configure service context based on provider
-  let serviceContextConfig = {
+  // Create a basic service context without setting an explicit embedding model
+  // Let LlamaIndex use its default embedding for this version
+  console.log('Using default LlamaIndex embedding model');
+
+  const serviceContext = serviceContextFromDefaults({
     llm: {
       model: modelName,
       temperature: 0.7,
+      apiKey: useOllama ? "ollama" : process.env.OPENAI_API_KEY,
+      baseUrl: useOllama ? `${ollamaBaseUrl}/v1` : undefined
     }
-  };
-
-  // Set up the embedding model and LLM configuration based on provider
-  if (useOllama) {
-    // For Ollama
-    const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "nomic-embed-text";
-    console.log(`Using Ollama embedding model: ${embeddingModel}`);
-
-    serviceContextConfig.llm.baseUrl = `${ollamaBaseUrl}/v1`;
-    serviceContextConfig.embedModel = new OllamaEmbedding({
-      modelName: embeddingModel,
-      baseUrl: ollamaBaseUrl
-    });
-  } else {
-    // For OpenAI
-    console.log('Using OpenAI embeddings');
-
-    serviceContextConfig.llm.apiKey = process.env.OPENAI_API_KEY;
-    serviceContextConfig.embedModel = new OpenAIEmbedding({
-      apiKey: process.env.OPENAI_API_KEY
-    });
-  }
-
-  const serviceContext = serviceContextFromDefaults(serviceContextConfig);
+  });
 
   // Read documents from the docs directory
   const reader = new SimpleDirectoryReader();
-  const documents = await reader.loadData('../docs');
+  const documents = await reader.loadData(path.join(__dirname, '../docs'));
   console.log(`Loaded ${documents.length} documents`);
 
   // Create a vector store index from the documents
@@ -128,7 +111,10 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    // Perform retrieval to get relevant context
+    // RAG happens here >>>
+    // We use LlamaIndex's query engine to retrieve the most relevant context
+    // NOTE: We do a retrieval for each user message, this is not efficient
+    //       and we will see a better approach in the next stage
     const queryEngine = _index.asQueryEngine();
     const retrievalResult = await queryEngine.query(message);
 

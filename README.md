@@ -128,7 +128,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 MODEL_NAME=llama3
 
 # For RAG examples, specify the embedding model when using Ollama
-EMBEDDING_MODEL_NAME=nomic-embed-text
+EMBEDDING_MODEL_NAME=all-minilm:l6-v2
 ```
 
 ## Getting Started

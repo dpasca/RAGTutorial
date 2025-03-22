@@ -81,7 +81,7 @@ async function initializeIndex()
   // Set up the embedding model and LLM configuration based on provider
   if (useOllama) {
     // For Ollama
-    const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "nomic-embed-text";
+    const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
     console.log(`Using Ollama embedding model: ${embeddingModel}`);
 
     serviceContextConfig.llm.baseUrl = `${ollamaBaseUrl}/v1`;
