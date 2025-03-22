@@ -49,7 +49,7 @@ function initializeClient()
 // Get model name from environment or use appropriate default
 function getModelName() {
   const useOllama = process.env.USE_OLLAMA !== "false";
-  return process.env.MODEL_NAME || (useOllama ? "llama3" : "gpt-4o-mini");
+  return process.env.MODEL_NAME || (useOllama ? "qwen2.5:3b" : "gpt-4o-mini");
 }
 
 //=======================================================
