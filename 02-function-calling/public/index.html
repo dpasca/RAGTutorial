@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Function Calling Chat - RAG Tutorial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Movie Rating Chat</h1>
+      <p>Chat with AI and ask about movie ratings</p>
+    </header>
+    
+    <main>
+      <div class="chat-container">
+        <div id="chat-history"></div>
+      </div>
+      
+      <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Ask about a movie rating (e.g., 'What's the rating of The Matrix?')" autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </main>
+    
+    <footer>
+      <p>Stage 2 of the RAG Tutorial Workshop</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatForm = document.getElementById('chat-form');
+      const userInput = document.getElementById('user-input');
+      const chatHistory = document.getElementById('chat-history');
+      
+      // Function to add a message to the chat history
+      function addMessageToChat(message, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+        
+        const textElement = document.createElement('p');
+        textElement.textContent = message;
+        
+        messageElement.appendChild(textElement);
+        chatHistory.appendChild(messageElement);
+        
+        // Scroll to bottom of chat history
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+      
+      // Function to add a movie rating card to the chat history
+      function addMovieRatingCard(movieData) {
+        if (!movieData) return;
+        
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('message', 'assistant', 'movie-card');
+        
+        // Create card content
+        let cardContent = '';
+        
+        if (movieData.error) {
+          cardContent = `
+            <div class="movie-info">
+              <h3>${movieData.movieTitle}</h3>
+              <p class="error">${movieData.error}</p>
+            </div>
+          `;
+        } else {
+          const starRating = '★'.repeat(Math.round(movieData.rating / 2)) + 
+                            '☆'.repeat(5 - Math.round(movieData.rating / 2));
+          
+          cardContent = `
+            <div class="movie-info">
+              <h3>${movieData.movieTitle} (${movieData.year})</h3>
+              <div class="rating">
+                <span class="rating-stars">${starRating}</span>
+                <span class="rating-number">${movieData.rating}/10</span>
+              </div>
+              <p class="genres">${movieData.genres}</p>
+              ${movieData.note ? `<p class="note">${movieData.note}</p>` : ''}
+            </div>
+          `;
+        }
+        
+        cardElement.innerHTML = cardContent;
+        chatHistory.appendChild(cardElement);
+        
+        // Scroll to bottom of chat history
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+      
+      // Handle form submission
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const message = userInput.value.trim();
+        if (!message) return;
+        
+        // Add user message to chat
+        addMessageToChat(message, 'user');
+        
+        // Clear input field
+        userInput.value = '';
+        
+        // Show loading indicator
+        const loadingElement = document.createElement('div');
+        loadingElement.classList.add('message', 'assistant', 'loading');
+        loadingElement.textContent = 'Thinking...';
+        chatHistory.appendChild(loadingElement);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        
+        try {
+          // Send message to server
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+          });
+          
+          const data = await response.json();
+          
+          // Remove loading indicator
+          chatHistory.removeChild(loadingElement);
+          
+          if (response.ok) {
+            // Add AI response to chat
+            addMessageToChat(data.response, 'assistant');
+            
+            // If function call data is available, show the movie card
+            if (data.functionCall && data.functionCall.name === "get_movie_rating") {
+              addMovieRatingCard(data.functionCall.result);
+            }
+          } else {
+            // Show error message
+            addMessageToChat(`Error: ${data.error || 'Unknown error'}`, 'error');
+          }
+        } catch (error) {
+          // Remove loading indicator
+          chatHistory.removeChild(loadingElement);
+          
+          // Show error message
+          addMessageToChat(`Error: Could not connect to server`, 'error');
+          console.error('Error:', error);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

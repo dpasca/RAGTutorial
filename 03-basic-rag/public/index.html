@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic RAG Chat - RAG Tutorial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>RAG-Powered Chat</h1>
+      <p>Chat with AI using Retrieval-Augmented Generation</p>
+    </header>
+
+    <main>
+      <div class="chat-container">
+        <div id="chat-history"></div>
+      </div>
+
+      <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Ask about AI history, quantum computing, or nutrition..." autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </main>
+
+    <aside id="context-panel" class="collapsed">
+      <div class="context-header">
+        <h3>Retrieved Context</h3>
+        <button id="toggle-context">Show Context</button>
+      </div>
+      <div class="context-content"></div>
+    </aside>
+
+    <footer>
+      <p>Stage 3 of the RAG Tutorial Workshop</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatForm = document.getElementById('chat-form');
+      const userInput = document.getElementById('user-input');
+      const chatHistory = document.getElementById('chat-history');
+      const contextPanel = document.getElementById('context-panel');
+      const contextContent = document.querySelector('.context-content');
+      const toggleContextBtn = document.getElementById('toggle-context');
+
+      let retrievedContextVisible = false;
+
+      // Toggle context panel visibility
+      toggleContextBtn.addEventListener('click', () => {
+        retrievedContextVisible = !retrievedContextVisible;
+        contextPanel.classList.toggle('collapsed', !retrievedContextVisible);
+        toggleContextBtn.textContent = retrievedContextVisible ? 'Hide Context' : 'Show Context';
+      });
+
+      // Function to add a message to the chat history
+      function addMessageToChat(message, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+
+        const textElement = document.createElement('p');
+        textElement.textContent = message;
+
+        messageElement.appendChild(textElement);
+        chatHistory.appendChild(messageElement);
+
+        // Scroll to bottom of chat history
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+
+      // Function to update context panel
+      function updateContextPanel(documents) {
+        if (!documents || documents.length === 0) {
+          contextContent.innerHTML = '<p class="no-context">No relevant documents were retrieved.</p>';
+          return;
+        }
+
+        contextContent.innerHTML = '';
+        documents.forEach((doc, index) => {
+          const docElement = document.createElement('div');
+          docElement.classList.add('context-item');
+
+          docElement.innerHTML = `
+            <div class="context-header">
+              <span class="context-number">Passage ${index + 1}</span>
+              <span class="context-score">Relevance: ${(doc.score * 100).toFixed(1)}%</span>
+            </div>
+            <p class="context-text">${doc.text}</p>
+          `;
+
+          contextContent.appendChild(docElement);
+        });
+
+        // Show the context panel automatically when there's new content
+        if (!retrievedContextVisible && documents.length > 0) {
+          toggleContextBtn.click();
+        }
+      }
+
+      // Handle form submission
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // Add user message to chat
+        addMessageToChat(message, 'user');
+
+        // Clear input field
+        userInput.value = '';
+
+        // Show loading indicator
+        const loadingElement = document.createElement('div');
+        loadingElement.classList.add('message', 'assistant', 'loading');
+        loadingElement.textContent = 'Searching and generating response...';
+        chatHistory.appendChild(loadingElement);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        try {
+          // Send message to server
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+          });
+
+          const data = await response.json();
+
+          // Remove loading indicator
+          chatHistory.removeChild(loadingElement);
+
+          if (response.ok) {
+            // Add AI response to chat
+            addMessageToChat(data.response, 'assistant');
+
+            // Update the context panel with retrieved documents
+            if (data.metadata && data.metadata.retrievedDocuments) {
+              updateContextPanel(data.metadata.retrievedDocuments);
+            }
+          } else {
+            // Show error message
+            addMessageToChat(`Error: ${data.error || 'Unknown error'}`, 'error');
+          }
+        } catch (error) {
+          // Remove loading indicator
+          chatHistory.removeChild(loadingElement);
+
+          // Show error message
+          addMessageToChat(`Error: Could not connect to server`, 'error');
+          console.error('Error:', error);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

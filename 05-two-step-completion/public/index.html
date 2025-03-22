@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two-Step Completion - RAG Tutorial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Two-Step RAG Completion</h1>
+      <p>Using a separate completion step to decide when to retrieve knowledge</p>
+    </header>
+
+    <main>
+      <div class="chat-container">
+        <div id="chat-history"></div>
+      </div>
+
+      <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Ask anything. The system will decide if RAG is needed..." autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </main>
+
+    <aside id="info-panel" class="collapsed">
+      <div class="info-toggle">
+        <button id="toggle-info">i</button>
+      </div>
+
+      <div class="info-content">
+        <div class="info-section">
+          <h3>JSON Query Analysis</h3>
+          <div id="json-analysis">
+            <pre class="no-data">No data yet</pre>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3>Retrieved Context</h3>
+          <div id="context-display">
+            <p class="no-data">No data yet</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <footer>
+      <p>Stage 5 of the RAG Tutorial Workshop</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatForm = document.getElementById('chat-form');
+      const userInput = document.getElementById('user-input');
+      const chatHistory = document.getElementById('chat-history');
+      const infoPanel = document.getElementById('info-panel');
+      const jsonAnalysis = document.getElementById('json-analysis');
+      const contextDisplay = document.getElementById('context-display');
+      const toggleInfoBtn = document.getElementById('toggle-info');
+
+      let infoPanelVisible = false;
+
+      // Toggle info panel visibility
+      toggleInfoBtn.addEventListener('click', () => {
+        infoPanelVisible = !infoPanelVisible;
+        infoPanel.classList.toggle('collapsed', !infoPanelVisible);
+      });
+
+      // Function to add a message to the chat history
+      function addMessageToChat(message, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+
+        const textElement = document.createElement('p');
+        textElement.textContent = message;
+
+        messageElement.appendChild(textElement);
+        chatHistory.appendChild(messageElement);
+
+        // Scroll to bottom of chat history
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+
+      // Function to update the JSON analysis display
+      function updateJsonAnalysis(decision) {
+        if (!decision) {
+          jsonAnalysis.innerHTML = '<pre class="no-data">No data available</pre>';
+          return;
+        }
+
+        // Format JSON for display
+        const formattedJson = JSON.stringify(decision, null, 2);
+        const highlightedJson = formattedJson
+          .replace(/"needsRetrieval": true/g, '"needsRetrieval": <span class="json-true">true</span>')
+          .replace(/"needsRetrieval": false/g, '"needsRetrieval": <span class="json-false">false</span>')
+          .replace(/"([^"]+)":/g, '<span class="json-key">"$1":</span>');
+
+        jsonAnalysis.innerHTML = `<pre class="json ${decision.needsRetrieval ? 'json-retrieval' : 'json-no-retrieval'}">${highlightedJson}</pre>`;
+      }
+
+      // Function to update the context display
+      function updateContextDisplay(documents) {
+        if (!documents || documents.length === 0) {
+          contextDisplay.innerHTML = '<p class="no-data">No documents retrieved</p>';
+          return;
+        }
+
+        contextDisplay.innerHTML = '';
+        documents.forEach((doc, index) => {
+          const docElement = document.createElement('div');
+          docElement.classList.add('context-item');
+
+          docElement.innerHTML = `
+            <div class="context-header">
+              <span class="context-number">Passage ${index + 1}</span>
+              <span class="context-score">Relevance: ${(doc.score * 100).toFixed(1)}%</span>
+            </div>
+            <p class="context-text">${doc.text}</p>
+          `;
+
+          contextDisplay.appendChild(docElement);
+        });
+      }
+
+      // Handle form submission
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // Add user message to chat
+        addMessageToChat(message, 'user');
+
+        // Clear input field
+        userInput.value = '';
+
+        // Show loading indicator
+        const loadingElement = document.createElement('div');
+        loadingElement.classList.add('message', 'assistant', 'loading');
+        loadingElement.textContent = 'Analyzing query and generating response...';
+        chatHistory.appendChild(loadingElement);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        try {
+          // Send message to server
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+          });
+
+          const data = await response.json();
+
+          // Remove loading indicator
+          chatHistory.removeChild(loadingElement);
+
+          if (response.ok) {
+            // Add AI response to chat
+            addMessageToChat(data.response, 'assistant');
+
+            // Update the JSON analysis display
+            if (data.ragDecision) {
+              updateJsonAnalysis(data.ragDecision);
+            }
+
+            // Update the context display
+            if (data.metadata && data.metadata.retrievedDocuments) {
+              updateContextDisplay(data.metadata.retrievedDocuments);
+            } else {
+              updateContextDisplay(null);
+            }
+
+            // Show the info panel if it's not already visible
+            if (!infoPanelVisible) {
+              toggleInfoBtn.click();
+            }
+          } else {
+            // Show error message
+            addMessageToChat(`Error: ${data.error || 'Unknown error'}`, 'error');
+          }
+        } catch (error) {
+          // Remove loading indicator
+          chatHistory.removeChild(loadingElement);
+
+          // Show error message
+          addMessageToChat(`Error: Could not connect to server`, 'error');
+          console.error('Error:', error);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic AI Chat - RAG Tutorial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Basic AI Chat</h1>
+      <p>A simple chat interface using the OpenAI API</p>
+    </header>
+
+    <main>
+      <div class="chat-container">
+        <div id="chat-history"></div>
+      </div>
+
+      <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Type your message here..." autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </main>
+
+    <footer>
+      <p>Stage 1 of the RAG Tutorial Workshop</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatForm = document.getElementById('chat-form');
+      const userInput = document.getElementById('user-input');
+      const chatHistory = document.getElementById('chat-history');
+
+      // Function to add a message to the chat history
+      function addMessageToChat(message, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', sender);
+
+        const textElement = document.createElement('p');
+        textElement.textContent = message;
+
+        messageElement.appendChild(textElement);
+        chatHistory.appendChild(messageElement);
+
+        // Scroll to bottom of chat history
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+
+      // Handle form submission
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // Add user message to chat
+        addMessageToChat(message, 'user');
+
+        // Clear input field
+        userInput.value = '';
+
+        // Show loading indicator
+        const loadingElement = document.createElement('div');
+        loadingElement.classList.add('message', 'assistant', 'loading');
+        loadingElement.textContent = 'Thinking...';
+        chatHistory.appendChild(loadingElement);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        try {
+          // Send message to server
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+          });
+
+          const data = await response.json();
+
+          // Remove loading indicator
+          chatHistory.removeChild(loadingElement);
+
+          if (response.ok) {
+            // Add AI response to chat
+            addMessageToChat(data.response, 'assistant');
+          } else {
+            // Show error message
+            addMessageToChat(`Error: ${data.error || 'Unknown error'}`, 'error');
+          }
+        } catch (error) {
+          // Remove loading indicator
+          chatHistory.removeChild(loadingElement);
+
+          // Show error message
+          addMessageToChat(`Error: Could not connect to server`, 'error');
+          console.error('Error:', error);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
