@@ -21,28 +21,16 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 //=======================================================
-// Initialize LLM client based on environment variables
 function initializeClient()
 {
-  // Here we use OpenAI client, also for Ollama
-  params = {};
-  if (process.env.USE_OLLAMA !== "false")
-  {
-    console.log("Using Ollama. Make sure Ollama is running on your machine.");
-    // Need to specify the base URL for Ollama
-    const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-    params = {
-      baseURL: `${ollamaBaseUrl}/v1`,
-      apiKey: "ollama", // Any non-empty string is fine here
-    };
-  }
-  else
-  {
-    console.log("Using OpenAI. Make sure you have set your OPENAI_API_KEY in the .env file.");
-    params = {apiKey: process.env.OPENAI_API_KEY};
-  }
-  // Return the OpenAI client
-  return new OpenAI(params);
+  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+  const useOllama = process.env.USE_OLLAMA !== "false";
+
+  // Initialize OpenAI client (works with Ollama too)
+  return new OpenAI({
+    baseURL: useOllama ? `${ollamaBaseUrl}/v1` : undefined,
+    apiKey: useOllama ? "ollama" : process.env.OPENAI_API_KEY,
+  });
 }
 
 //=======================================================

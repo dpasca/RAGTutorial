@@ -125,49 +125,42 @@ async function searchSimilarDocuments(queryEmbedding, topK = 3) {
 
 //=======================================================
 // Function to initialize the document store
-async function initializeDocumentStore() {
+async function initializeDocumentStore()
+{
   console.log('Initializing document store...');
+  console.log('Using in-memory vector store');
 
-  try {
-    // We'll use a simple in-memory vector store instead of ChromaDB
-    // to make the example simpler and avoid external dependencies
-    console.log('Using in-memory vector store');
+  // Load documents from the docs directory
+  const docsDir = path.join(__dirname, '../docs');
+  const docFiles = globSync('**/*.md', { cwd: docsDir });
 
-    // Load documents from the docs directory
-    const docsDir = path.join(__dirname, '../docs');
-    const docFiles = globSync('**/*.md', { cwd: docsDir });
+  console.log(`Found ${docFiles.length} documents to index`);
 
-    console.log(`Found ${docFiles.length} documents to index`);
+  for (const file of docFiles) {
+    const filePath = path.join(docsDir, file);
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const chunks = splitIntoChunks(content);
 
-    for (const file of docFiles) {
-      const filePath = path.join(docsDir, file);
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const chunks = splitIntoChunks(content);
+    console.log(`Processing ${file}: ${chunks.length} chunks`);
 
-      console.log(`Processing ${file}: ${chunks.length} chunks`);
+    // Get embeddings for chunks
+    const embeddings = await getEmbeddings(chunks);
 
-      // Get embeddings for chunks
-      const embeddings = await getEmbeddings(chunks);
-
-      // Add documents to in-memory store
-      for (let i = 0; i < chunks.length; i++) {
-        const id = uuidv4();
-        inMemoryVectorStore[id] = {
-          document: chunks[i],
-          embedding: embeddings[i],
-          metadata: { source: file }
-        };
-      }
+    // Add documents to in-memory store
+    for (let i = 0; i < chunks.length; i++) {
+      const id = uuidv4();
+      inMemoryVectorStore[id] = {
+        document: chunks[i],
+        embedding: embeddings[i],
+        metadata: { source: file }
+      };
     }
-
-    console.log('Documents indexed successfully');
-    return true;
-  } catch (error) {
-    console.error('Error initializing document store:', error);
-    return false;
   }
+
+  console.log('Documents indexed successfully');
 }
 
+//=======================================================
 // API endpoint for RAG-based chat
 app.post('/api/chat', async (req, res) => {
   try {
@@ -243,10 +236,7 @@ app.listen(port, async () => {
   console.log(`Server is running at http://localhost:${port}`);
 
   try {
-    const initialized = await initializeDocumentStore();
-    if (!initialized) {
-      console.error('Failed to initialize document store. The application may not work correctly.');
-    }
+    await initializeDocumentStore();
   } catch (error) {
     console.error('Error during startup:', error);
   }
