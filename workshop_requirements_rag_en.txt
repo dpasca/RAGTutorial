@@ -1,5 +1,5 @@
-Pre-Workshop Installation Requirements
-======================================
+RAG Tutorial - Pre-Workshop Installation Requirements
+=====================================================
 
 Please make sure you have the following software installed on your computer:
 
