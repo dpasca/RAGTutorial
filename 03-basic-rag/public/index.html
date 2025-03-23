@@ -19,8 +19,16 @@
         <div id="chat-history"></div>
       </div>
 
+      <div class="preset-buttons">
+        <button type="button" class="preset-button" data-text="hi">hi</button>
+        <button type="button" class="preset-button" data-text="こんにちは">こんにちは</button>
+        <button type="button" class="preset-button" data-text="what happened on April 15?">what happened on April 15?</button>
+        <button type="button" class="preset-button" data-text="April 15日に何があったの？">April 15日に何があったの？</button>
+      </div>
       <form id="chat-form">
-        <input type="text" id="user-input" placeholder="Ask about AI history, quantum computing, or nutrition..." autocomplete="off">
+        <input type="text" id="user-input"
+          placeholder="Try 'what happened on April 15?'... 'April 15日に何があったの？'..."
+          autocomplete="off">
         <button type="submit">Send</button>
       </form>
     </main>
@@ -54,6 +62,16 @@
         retrievedContextVisible = !retrievedContextVisible;
         contextPanel.style.display = retrievedContextVisible ? 'flex' : 'none';
         toggleContextBtn.textContent = retrievedContextVisible ? 'Hide Context' : 'Show Context';
+      });
+      
+      // Set up preset buttons
+      const presetButtons = document.querySelectorAll('.preset-button');
+      presetButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const text = button.getAttribute('data-text');
+          userInput.value = text;
+          userInput.focus();
+        });
       });
 
       // Function to add a message to the chat history
