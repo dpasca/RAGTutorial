@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { OpenAI } = require('openai');
 const { globSync } = require('glob');
-const { v4: uuidv4 } = require('uuid');
+const { VectorStore } = require('./vectorStore');
 
 // Initialize Express app
 const app = express();
@@ -41,123 +41,18 @@ const modelName = getModelName();
 console.log(`Using model: ${modelName}`);
 
 //=======================================================
-// Function to create a local in-memory embeddings database
-let inMemoryVectorStore = {};
-
-//=======================================================
-// Function to split text into chunks
-function splitIntoChunks(text, maxChunkSize = 500) {
-  const chunks = [];
-  const sentences = text.split(/(?<=[.!?])\s+/);
-
-  let currentChunk = "";
-  for (const sentence of sentences) {
-    if (currentChunk.length + sentence.length > maxChunkSize && currentChunk.length > 0) {
-      chunks.push(currentChunk.trim());
-      currentChunk = "";
-    }
-    currentChunk += sentence + " ";
-  }
-
-  if (currentChunk.trim().length > 0) {
-    chunks.push(currentChunk.trim());
-  }
-
-  return chunks;
-}
-
-//=======================================================
-// Function to get embeddings from Ollama
-async function getEmbeddings(texts) {
-  const embeddings = [];
-
-  for (const text of texts) {
-    const response = await openai.embeddings.create({
-      model: process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2",
-      input: text,
-    });
-
-    embeddings.push(response.data[0].embedding);
-  }
-
-  return embeddings;
-}
-
-//=======================================================
-// Function to calculate cosine similarity between vectors
-function cosineSimilarity(vecA, vecB) {
-  const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
-  const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
-  const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
-  return dotProduct / (magA * magB);
-}
-
-//=======================================================
-// Function to search for similar documents
-async function searchSimilarDocuments(queryEmbedding, topK = 3) {
-  if (Object.keys(inMemoryVectorStore).length === 0) {
-    return { documents: [], scores: [], metadatas: [] };
-  }
-
-  // Calculate similarity scores
-  const results = Object.entries(inMemoryVectorStore).map(([id, item]) => {
-    const similarity = cosineSimilarity(queryEmbedding, item.embedding);
-    return {
-      id,
-      document: item.document,
-      metadata: item.metadata,
-      score: similarity
-    };
-  });
-
-  // Sort by similarity score (highest first)
-  results.sort((a, b) => b.score - a.score);
-
-  // Take topK results
-  const topResults = results.slice(0, topK);
-
-  return {
-    documents: topResults.map(r => r.document),
-    scores: topResults.map(r => r.score),
-    metadatas: topResults.map(r => r.metadata)
-  };
-}
+// Initialize the vector store
+const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
+const vectorStore = new VectorStore(openai, embeddingModel);
 
 //=======================================================
 // Function to initialize the document store
-async function initializeDocumentStore()
-{
-  console.log('Initializing document store...');
-  console.log('Using in-memory vector store');
-
+async function initializeDocumentStore() {
   // Load documents from the docs directory
   const docsDir = path.join(__dirname, '../docs');
-  const docFiles = globSync('**/*.md', { cwd: docsDir });
 
-  console.log(`Found ${docFiles.length} documents to index`);
-
-  for (const file of docFiles) {
-    const filePath = path.join(docsDir, file);
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const chunks = splitIntoChunks(content);
-
-    console.log(`Processing ${file}: ${chunks.length} chunks`);
-
-    // Get embeddings for chunks
-    const embeddings = await getEmbeddings(chunks);
-
-    // Add documents to in-memory store
-    for (let i = 0; i < chunks.length; i++) {
-      const id = uuidv4();
-      inMemoryVectorStore[id] = {
-        document: chunks[i],
-        embedding: embeddings[i],
-        metadata: { source: file }
-      };
-    }
-  }
-
-  console.log('Documents indexed successfully');
+  // Initialize the vector store with documents from the directory
+  await vectorStore.initializeFromDirectory(docsDir);
 }
 
 //=======================================================
@@ -171,17 +66,14 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Make sure document store is initialized
-    if (Object.keys(inMemoryVectorStore).length === 0) {
+    if (vectorStore.isEmpty()) {
       return res.status(503).json({
         error: 'Document store is still initializing. Please try again in a moment.'
       });
     }
 
-    // Generate embedding for the query
-    const queryEmbedding = await getEmbeddings([message]);
-
-    // Query the in-memory vector store for similar documents
-    const queryResult = await searchSimilarDocuments(queryEmbedding[0], 3);
+    // Search for similar documents using the vector store
+    const queryResult = await vectorStore.search(message, 3);
 
     // Get the retrieved documents
     const retrievedDocuments = queryResult.documents || [];
