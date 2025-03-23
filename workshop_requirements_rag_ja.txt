@@ -16,7 +16,7 @@ RAG Tutorial - ワークショップ前インストール要件
 3. 必要なAIモデル：
    Ollamaをインストールした後、ターミナル/コマンドプロンプトを開いて以下を実行：
    - `ollama pull qwen2.5:3b`（またはメモリが十分にある場合は `ollama pull qwen2.5:7b`）
-   - `ollama pull all-minilm:l6-v2`
+   - `ollama pull nomic-embed-text`
 
 4. Git：
    - Windows: https://git-scm.com/download/win からダウンロードしてインストール

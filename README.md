@@ -105,7 +105,7 @@ RAGTutorial/
 2. Using Ollama from the command line, get the model you want to use:
    ```
    ollama pull qwen2.5:3b
-   ollama pull all-minilm:l6-v2
+   ollama pull nomic-embed-text
    ```
 3. Install dependencies for the example you want to run:
    ```
@@ -126,7 +126,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 
 MODEL_NAME=llama3 # Change this to a model you have installed
 
-EMBEDDING_MODEL_NAME=all-minilm:l6-v2
+EMBEDDING_MODEL_NAME=nomic-embed-text
 ```
 
 ## Resources

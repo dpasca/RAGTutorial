@@ -41,7 +41,7 @@ console.log(`Using model: ${modelName}`);
 
 //=======================================================
 // Initialize the vector store
-const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
+const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "nomic-embed-text";
 const vectorStore = new VectorStore(openai, embeddingModel);
 
 // Simple in-memory conversation history for the demo

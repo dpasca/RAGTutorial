@@ -41,7 +41,7 @@ console.log(`Using model: ${modelName}`);
 
 //=======================================================
 // Initialize the vector store
-const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
+const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "nomic-embed-text";
 const vectorStore = new VectorStore(openai, embeddingModel);
 
 // Simple in-memory conversation history for the demo
@@ -129,7 +129,7 @@ async function executeToolCall(call)
 
       // Call the actual function here
       const searchResults = await searchKnowledgeBase(args.query, limit);
-      console.log(`Called search_knowledge_base for: ${args.query} -> ${searchResults.documents.length} results`);
+      console.log(`Called search_knowledge_base: query:${args.query} -> ${searchResults.documents.length} results`);
 
       // Good content to return
       returnContent = searchResults;
@@ -278,15 +278,18 @@ Tools are a private internal implementation detail that do not concern the user.
 
       if (newAssistantMessage)
       {
-        return res.json({
-          // Return the response from the LLM
-          response: newAssistantMessage.content,
+        let metadata = { ragUsed: false, retrievedDocuments: [] };
 
-          // Return the RAG results for debugging/display purposes
-          metadata: {
-            ragUsed: debug_ragResults !== null,
-            retrievedDocuments: debug_ragResults ? formatRagResults(debug_ragResults) : []
-          }
+        if (debug_ragResults)
+        {
+          metadata.ragUsed = true;
+          metadata.retrievedDocuments = formatRagResults(debug_ragResults);
+          console.log(`Retrieved documents: ${JSON.stringify(metadata.retrievedDocuments)}`);
+        }
+
+        return res.json({
+          response: newAssistantMessage.content, // Actual response from the LLM
+          metadata: metadata, // RAG results for debugging/display purposes
         });
       }
     }

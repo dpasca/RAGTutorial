@@ -6,7 +6,7 @@ const { splitIntoChunks } = require('./splitIntoChunks');
 
 /* SAMPLE CODE:
 
-const vs = new VectorStore(openaiClient, "all-minilm:l6-v2");
+const vs = new VectorStore(openaiClient, "nomic-embed-text");
 vs.initializeFromDirectory("../docs");
 
 const query = "What is the capital of France?";
@@ -23,7 +23,7 @@ class VectorStore
   constructor(openaiClient, embeddingModelName) {
     this.store = {};
     this.openaiClient = openaiClient;
-    this.embeddingModelName = embeddingModelName || "all-minilm:l6-v2";
+    this.embeddingModelName = embeddingModelName || "nomic-embed-text";
   }
 
   // Initialize the document store from a directory of markdown files
