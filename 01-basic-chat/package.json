@@ -1,7 +1,7 @@
 {
   "name": "01-basic-chat",
   "version": "1.0.0",
-  "description": "Basic chat application using OpenAI API",
+  "description": "Basic chat application with Ollama using OpenAI API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -22,11 +22,11 @@ RAGTutorial/
 │   ├── ADD_YOUR_OWN_DOCS_HERE.md
 │   ├── lost-signal-of-elara-7_en.md
 │   └── lost-signal-of-elara-7_ja.md
-├── 01-basic-chat/                # Simple completion
-├── 02-function-calling/          # Movie rating function
+├── 01-basic-chat/                # Simple chat with Ollama
+├── 02-function-calling/          # Function calling to get movie ratings
 ├── 03-basic-rag/                 # Simple RAG using Ollama
-├── 04-function-rag-decision/     # Using functions to trigger RAG
-└── 05-two-step-completion/       # Plain completion for RAG decisions
+├── 04-function-rag-decision/     # Function calling to decide when to use RAG
+└── 05-agent-rag-decision/        # Agent to decide when to use RAG
 ```
 
 ## Workshop Stages

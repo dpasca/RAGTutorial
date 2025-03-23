@@ -1,7 +1,7 @@
 {
-  "name": "05-two-step-completion",
+  "name": "05-agent-rag-decision",
   "version": "1.0.0",
-  "description": "Chat application with two-step completion for RAG decisions",
+  "description": "Chat application with agentic RAG",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
