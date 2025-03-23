@@ -134,15 +134,15 @@ ${retrievedContext}
     });
 
     // Extract and send the response with metadata
-    const aiResponse = completion.choices[0].message.content;
+    const assistantMessage = completion.choices[0].message;
 
     // Add the user and assistant messages to the conversation history
     conversationHistory.push({ role: "user", content: userMessage });
-    conversationHistory.push({ role: "assistant", content: aiResponse });
+    conversationHistory.push({ role: "assistant", content: assistantMessage.content });
     trimConversationHistory();
 
     res.json({
-      response: aiResponse,
+      response: assistantMessage.content,
       metadata: {
         retrievedDocuments: retrievedDocuments.map((text, i) => ({
           text: text.length > 150 ? text.substring(0, 150) + '...' : text,
