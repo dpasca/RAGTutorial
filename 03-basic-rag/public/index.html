@@ -11,6 +11,7 @@
     <header>
       <h1>RAG-Powered Chat</h1>
       <p>Chat with AI using Retrieval-Augmented Generation</p>
+      <button id="toggle-context">Show Context</button>
     </header>
 
     <main>
@@ -24,10 +25,9 @@
       </form>
     </main>
 
-    <aside id="context-panel" class="collapsed">
+    <aside id="context-panel" style="display: none;">
       <div class="context-header">
         <h3>Retrieved Context</h3>
-        <button id="toggle-context">Show Context</button>
       </div>
       <div class="context-content"></div>
     </aside>
@@ -46,12 +46,13 @@
       const contextContent = document.querySelector('.context-content');
       const toggleContextBtn = document.getElementById('toggle-context');
 
+      // Set up context panel toggle
       let retrievedContextVisible = false;
-
+      
       // Toggle context panel visibility
       toggleContextBtn.addEventListener('click', () => {
         retrievedContextVisible = !retrievedContextVisible;
-        contextPanel.classList.toggle('collapsed', !retrievedContextVisible);
+        contextPanel.style.display = retrievedContextVisible ? 'flex' : 'none';
         toggleContextBtn.textContent = retrievedContextVisible ? 'Hide Context' : 'Show Context';
       });
 
