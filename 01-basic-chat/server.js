@@ -42,6 +42,13 @@ console.log(`Using model: ${modelName}`);
 // Simple in-memory conversation history for the demo
 const conversationHistory = [];
 
+// Avoid history growing too large
+function trimConversationHistory()
+{
+  if (conversationHistory.length > 20)
+    conversationHistory.splice(0, 4);
+}
+
 //=======================================================
 // API endpoint to reset conversation history
 app.post('/api/chat/reset', (req, res) => {
@@ -57,15 +64,16 @@ app.post('/api/chat/reset', (req, res) => {
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
+    const userMessage = message;
 
-    if (!message) {
+    if (!userMessage) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
     // Create messages array with conversation history
     const messages = [
       ...conversationHistory,
-      { role: "user", content: message }
+      { role: "user", content: userMessage }
     ];
 
     // Call LLM API with conversation history
@@ -79,13 +87,9 @@ app.post('/api/chat', async (req, res) => {
     const aiResponse = completion.choices[0].message.content;
 
     // Add the user and assistant messages to the conversation history
-    conversationHistory.push({ role: "user", content: message });
+    conversationHistory.push({ role: "user", content: userMessage });
     conversationHistory.push({ role: "assistant", content: aiResponse });
-
-    // Limit history size to prevent context window issues
-    if (conversationHistory.length > 10) {
-      conversationHistory.splice(0, 2); // Remove oldest exchange
-    }
+    trimConversationHistory();
 
     res.json({ response: aiResponse });
   } catch (error) {

@@ -47,6 +47,13 @@ const vectorStore = new VectorStore(openai, embeddingModel);
 // Simple in-memory conversation history for the demo
 const conversationHistory = [];
 
+// Avoid history growing too large
+function trimConversationHistory()
+{
+  if (conversationHistory.length > 20)
+    conversationHistory.splice(0, 4);
+}
+
 //=======================================================
 // Function to initialize the document store
 async function initializeDocumentStore() {
@@ -72,8 +79,9 @@ app.post('/api/chat/reset', (req, res) => {
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
+    const userMessage = message;
 
-    if (!message) {
+    if (!userMessage) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
@@ -85,7 +93,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Search for similar documents using the vector store
-    const queryResult = await vectorStore.search(message, 3);
+    const queryResult = await vectorStore.search(userMessage, 3);
 
     // Get the retrieved documents
     const retrievedDocuments = queryResult.documents || [];
@@ -104,7 +112,7 @@ Never use the additional context in your answer, unless it's relevant to the use
 `;
 
     // Create a prompt that includes the retrieved context
-    const prompt = `${message}
+    const prompt = `${userMessage}
 
 ---
 Additional context:
@@ -129,13 +137,9 @@ ${retrievedContext}
     const aiResponse = completion.choices[0].message.content;
 
     // Add the user and assistant messages to the conversation history
-    conversationHistory.push({ role: "user", content: message });
+    conversationHistory.push({ role: "user", content: userMessage });
     conversationHistory.push({ role: "assistant", content: aiResponse });
-
-    // Limit history size to prevent context window issues (optional)
-    if (conversationHistory.length > 10) {
-      conversationHistory.splice(0, 2); // Remove oldest exchange
-    }
+    trimConversationHistory();
 
     res.json({
       response: aiResponse,
