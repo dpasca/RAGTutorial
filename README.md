@@ -17,16 +17,18 @@ This workshop provides a hands-on introduction to RAG through progressive exampl
 
 ```
 RAGTutorial/
-├── README.md                     # Workshop instructions
+├── README.md                     # This file
+├── workshop_requirements_en.md   # Requirements (English)
+├── workshop_requirements_ja.md   # Requirements (Japanese)
 ├── docs/                         # Sample documents for RAG
 │   ├── ADD_YOUR_OWN_DOCS_HERE.md
 │   ├── lost-signal-of-elara-7_en.md
 │   └── lost-signal-of-elara-7_ja.md
 ├── 01-basic-chat/                # Simple chat with Ollama
-├── 02-function-calling/          # Function calling to get movie ratings
+├── 02-function-calling/          # Function-calling example
 ├── 03-basic-rag/                 # Simple RAG using Ollama
-├── 04-function-rag-decision/     # Function calling to decide when to use RAG
-└── 05-agent-rag-decision/        # Agent to decide when to use RAG
+├── 04-function-rag-decision/     # Function-calling for RAG
+└── 05-agent-rag-decision/        # Agentic RAG
 ```
 
 ## Workshop Stages
@@ -59,7 +61,7 @@ RAGTutorial/
 
 ### Stage 3: Basic RAG
 
-**Objective:** Implement the core RAG pattern with LlamaIndex.
+**Objective:** Implement the core RAG pattern from scratch.
 
 **Features:**
 - Document loading and processing
@@ -73,7 +75,7 @@ RAGTutorial/
 
 ### Stage 4: Function-Based RAG Decision
 
-**Objective:** Use function calling to intelligently decide when to use RAG.
+**Objective:** Use function-calling to intelligently decide when to use RAG.
 
 **Features:**
 - Decision function for retrieval necessity
@@ -85,18 +87,16 @@ RAGTutorial/
 - Hybrid processing pipelines
 - Optimizing for relevance and performance
 
-### Stage 5: Two-Step Completion
+### Stage 5: Agentic RAG Decision
 
-**Objective:** Separate the RAG decision and execution using a two-step approach.
+**Objective:** Use an agent to decide when to use RAG.
 
 **Features:**
 - Initial query analysis completion
-- JSON response parsing
 - Conditional context augmentation
 
 **Key Concepts:**
 - Multi-stage prompting
-- Structured LLM outputs
 - Building more flexible RAG systems
 
 ## Getting Started
@@ -124,7 +124,7 @@ If you want to use a different model, copy the `.env.example` file to `.env` and
 USE_OLLAMA=true
 OLLAMA_BASE_URL=http://localhost:11434
 
-MODEL_NAME=llama3 # Change this to a model you have installed
+MODEL_NAME=qwen2.5:7b # Change this to a model you have installed
 
 EMBEDDING_MODEL_NAME=nomic-embed-text
 ```
@@ -134,3 +134,13 @@ EMBEDDING_MODEL_NAME=nomic-embed-text
 - [OpenAI API Documentation](https://platform.openai.com/docs/)
 - [Ollama Project](https://ollama.ai/)
 - [Node.js Documentation](https://nodejs.org/en/docs/)
+
+
+## Contact
+
+This workshop is created by Davide Pasca.
+
+If you have any questions, please contact me at:
+
+- [davide@newtypekk.com](mailto:davide@newtypekk.com)
+- [x.com/109mae](https://x.com/109mae)
