@@ -30,6 +30,7 @@
           placeholder="Try 'what happened on April 15?'... 'April 15日に何があったの？'..."
           autocomplete="off">
         <button type="submit">Send</button>
+        <button type="button" id="reset-button" class="reset-button">Reset</button>
       </form>
     </main>
 
@@ -56,14 +57,14 @@
 
       // Set up context panel toggle
       let retrievedContextVisible = false;
-      
+
       // Toggle context panel visibility
       toggleContextBtn.addEventListener('click', () => {
         retrievedContextVisible = !retrievedContextVisible;
         contextPanel.style.display = retrievedContextVisible ? 'flex' : 'none';
         toggleContextBtn.textContent = retrievedContextVisible ? 'Hide Context' : 'Show Context';
       });
-      
+
       // Set up preset buttons
       const presetButtons = document.querySelectorAll('.preset-button');
       presetButtons.forEach(button => {
@@ -73,6 +74,7 @@
           userInput.focus();
         });
       });
+
 
       // Function to add a message to the chat history
       function addMessageToChat(message, sender) {
@@ -117,6 +119,42 @@
           toggleContextBtn.click();
         }
       }
+
+            // Function to reset the chat
+      async function resetChat() {
+        // Clear chat history on the UI
+        chatHistory.innerHTML = '';
+
+        // Clear input field
+        userInput.value = '';
+
+        // Hide context panel
+        if (retrievedContextVisible) {
+          retrievedContextVisible = false;
+          contextPanel.style.display = 'none';
+          toggleContextBtn.textContent = 'Show Context';
+        }
+
+        // Clear context content
+        contextContent.innerHTML = '';
+
+        // Reset conversation history on the server
+        try {
+          await fetch('/api/chat/reset', {
+            method: 'POST',
+          });
+
+          // Add system message
+          addMessageToChat('Chat has been reset.', 'assistant');
+        } catch (error) {
+          console.error('Error resetting chat:', error);
+          addMessageToChat('Failed to reset chat on the server.', 'error');
+        }
+      }
+
+      // Set up reset button
+      const resetButton = document.getElementById('reset-button');
+      resetButton.addEventListener('click', resetChat);
 
       // Handle form submission
       chatForm.addEventListener('submit', async (e) => {

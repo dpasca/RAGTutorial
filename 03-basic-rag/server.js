@@ -44,6 +44,9 @@ console.log(`Using model: ${modelName}`);
 const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
 const vectorStore = new VectorStore(openai, embeddingModel);
 
+// Simple in-memory conversation history for the demo
+const conversationHistory = [];
+
 //=======================================================
 // Function to initialize the document store
 async function initializeDocumentStore() {
@@ -53,6 +56,16 @@ async function initializeDocumentStore() {
   // Initialize the vector store with documents from the directory
   await vectorStore.initializeFromDirectory(docsDir);
 }
+
+//=======================================================
+// API endpoint to reset conversation history
+app.post('/api/chat/reset', (req, res) => {
+  // Clear the conversation history
+  conversationHistory.length = 0;
+
+  // Send success response
+  res.json({ success: true, message: 'Conversation history has been reset' });
+});
 
 //=======================================================
 // API endpoint for RAG-based chat
@@ -98,16 +111,31 @@ Additional context:
 ${retrievedContext}
 `;
 
-    // Call LLM API with the augmented prompt
+    // Create messages array with system prompt and conversation history
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory,
+      { role: "user", content: prompt }
+    ];
+
+    // Call LLM API with the conversation history and augmented prompt
     const completion = await openai.chat.completions.create({
       model: modelName,
-      messages: [{ role: "system", content: systemPrompt },
-                 { role: "user", content: prompt }],
+      messages: messages,
       temperature: 0.7,
     });
 
     // Extract and send the response with metadata
     const aiResponse = completion.choices[0].message.content;
+
+    // Add the user and assistant messages to the conversation history
+    conversationHistory.push({ role: "user", content: message });
+    conversationHistory.push({ role: "assistant", content: aiResponse });
+
+    // Limit history size to prevent context window issues (optional)
+    if (conversationHistory.length > 10) {
+      conversationHistory.splice(0, 2); // Remove oldest exchange
+    }
 
     res.json({
       response: aiResponse,

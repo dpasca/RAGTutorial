@@ -39,6 +39,9 @@ const openai = initializeClient();
 const modelName = getModelName();
 console.log(`Using model: ${modelName}`);
 
+// Simple in-memory conversation history for the demo
+const conversationHistory = [];
+
 //=======================================================
 // Define function for getting movie ratings
 const getMovieRatingFunction = {
@@ -67,6 +70,16 @@ function getMovieRating(movieTitle)
 }
 
 //=======================================================
+// API endpoint to reset conversation history
+app.post('/api/chat/reset', (req, res) => {
+  // Clear the conversation history
+  conversationHistory.length = 0;
+
+  // Send success response
+  res.json({ success: true, message: 'Conversation history has been reset' });
+});
+
+//=======================================================
 // API endpoint for chat
 app.post('/api/chat', async (req, res) => {
   try {
@@ -76,10 +89,16 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Call LLM API with function calling
+    // Create messages array with conversation history
+    const messages = [
+      ...conversationHistory,
+      { role: "user", content: message }
+    ];
+
+    // Call LLM API with function calling and conversation history
     const completion = await openai.chat.completions.create({
       model: modelName,
-      messages: [{ role: "user", content: message }],
+      messages: messages,
       temperature: 0.7,
       tools: [{ type: "function", function: getMovieRatingFunction }],
       tool_choice: "auto"
@@ -107,27 +126,60 @@ app.post('/api/chat', async (req, res) => {
 
         console.log(`Calling the API again with the function response`);
 
+        // Create a complete history with the function call and result
+        const secondMessages = [
+          ...conversationHistory,
+          { role: "user", content: message },
+          responseMessage,
+          {
+            role: "tool",
+            tool_call_id: functionCall.id,
+            content: JSON.stringify(movieRating)
+          }
+        ];
+
         // Call the API again with the function response
         const secondCompletion = await openai.chat.completions.create({
           model: modelName,
-          messages: [
-            { role: "user", content: message },
-            responseMessage,
-            {
-              role: "tool",
-              tool_call_id: functionCall.id,
-              content: JSON.stringify(movieRating)
-            }
-          ],
+          messages: secondMessages,
           temperature: 0.7
         });
 
-        return res.json({ response: secondCompletion.choices[0].message.content });
+        const aiResponse = secondCompletion.choices[0].message.content;
+
+        // Store the full conversation including function calls in history
+        conversationHistory.push({ role: "user", content: message });
+        conversationHistory.push(responseMessage);
+        conversationHistory.push({
+          role: "tool",
+          tool_call_id: functionCall.id,
+          content: JSON.stringify(movieRating)
+        });
+        conversationHistory.push({
+          role: "assistant",
+          content: aiResponse
+        });
+
+        // Limit history size
+        if (conversationHistory.length > 20) { // Larger limit for function calling
+          conversationHistory.splice(0, 4); // Remove a full exchange with function calls
+        }
+
+        return res.json({ response: aiResponse });
       }
     }
 
-    // If no function call, just return the response
-    return res.json({ response: responseMessage.content });
+    // If no function call, just add to history and return the response
+    const aiResponse = responseMessage.content;
+    conversationHistory.push({ role: "user", content: message });
+    conversationHistory.push({ role: "assistant", content: aiResponse });
+
+    // Limit history size
+    if (conversationHistory.length > 10) {
+      conversationHistory.splice(0, 2);
+    }
+
+    return res.json({ response: aiResponse });
   } catch (error) {
     console.error('Error in chat endpoint:', error);
     res.status(500).json({

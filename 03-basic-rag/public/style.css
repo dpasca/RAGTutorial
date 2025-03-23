@@ -163,6 +163,21 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.reset-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  padding: 12px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.reset-button:hover {
+  background-color: #c0392b;
+}
+
 /* Context Panel Styling - Completely detached from main layout */
 #context-panel {
   position: fixed;

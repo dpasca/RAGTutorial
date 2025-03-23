@@ -39,6 +39,19 @@ const openai = initializeClient();
 const modelName = getModelName();
 console.log(`Using model: ${modelName}`);
 
+// Simple in-memory conversation history for the demo
+const conversationHistory = [];
+
+//=======================================================
+// API endpoint to reset conversation history
+app.post('/api/chat/reset', (req, res) => {
+  // Clear the conversation history
+  conversationHistory.length = 0;
+
+  // Send success response
+  res.json({ success: true, message: 'Conversation history has been reset' });
+});
+
 //=======================================================
 // API endpoint for chat
 app.post('/api/chat', async (req, res) => {
@@ -49,15 +62,31 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Call LLM API
+    // Create messages array with conversation history
+    const messages = [
+      ...conversationHistory,
+      { role: "user", content: message }
+    ];
+
+    // Call LLM API with conversation history
     const completion = await openai.chat.completions.create({
       model: modelName,
-      messages: [{ role: "user", content: message }],
+      messages: messages,
       temperature: 0.7,
     });
 
     // Extract and send the response
     const aiResponse = completion.choices[0].message.content;
+
+    // Add the user and assistant messages to the conversation history
+    conversationHistory.push({ role: "user", content: message });
+    conversationHistory.push({ role: "assistant", content: aiResponse });
+
+    // Limit history size to prevent context window issues
+    if (conversationHistory.length > 10) {
+      conversationHistory.splice(0, 2); // Remove oldest exchange
+    }
+
     res.json({ response: aiResponse });
   } catch (error) {
     console.error('Error in chat endpoint:', error);
