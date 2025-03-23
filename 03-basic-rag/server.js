@@ -80,17 +80,29 @@ app.post('/api/chat', async (req, res) => {
     const documentScores = queryResult.scores || [];
     const documentMetadatas = queryResult.metadatas || [];
 
+    // Create a prompt that explains how to use the additional context
+    // Small language models tend to be too eager to use the additional context
+    //  so we need to be strong about being selective about using it
+    const systemPrompt = `
+You are a helpful assistant.
+At the bottom of the user's message, there may be some "additional context".
+Never mention the additional context to the user.
+Never use the additional context in your answer, unless it's relevant to the user's question.
+`;
+
     // Create a prompt that includes the retrieved context
     const prompt = `${message}
-<AdditionalContextProvidedByTheSystem>
+
+---
+Additional context:
 ${retrievedContext}
-</AdditionalContextProvidedByTheSystem>
 `;
 
     // Call LLM API with the augmented prompt
     const completion = await openai.chat.completions.create({
       model: modelName,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "system", content: systemPrompt },
+                 { role: "user", content: prompt }],
       temperature: 0.7,
     });
 
