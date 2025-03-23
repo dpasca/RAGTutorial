@@ -4,9 +4,9 @@ const { v4: uuidv4 } = require('uuid');
 const { globSync } = require('glob');
 const { splitIntoChunks } = require('./splitIntoChunks');
 
-/* Sample sage:
+/* SAMPLE CODE:
 
-vs = new VectorStore(openaiClient, "all-minilm:l6-v2");
+const vs = new VectorStore(openaiClient, "all-minilm:l6-v2");
 vs.initializeFromDirectory("../docs");
 
 const query = "What is the capital of France?";
@@ -101,6 +101,8 @@ class VectorStore
   // Generate embeddings for an array of texts
   //  @param {string[]} texts - Array of text chunks
   //  @returns {number[][]} - Array of embedding vectors
+  //  @note Embeddings are vectors of numbers, which are used to
+  //        represent the text in a vector space.
   async getEmbeddings(texts) {
     const embeddings = [];
 
