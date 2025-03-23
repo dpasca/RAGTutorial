@@ -19,47 +19,45 @@ This workshop provides a hands-on introduction to RAG through progressive exampl
 RAGTutorial/
 ├── README.md                     # Workshop instructions
 ├── docs/                         # Sample documents for RAG
-│   ├── ai_history.txt
-│   ├── quantum_computing.txt
-│   └── nutrition_facts.txt
+│   ├── ADD_YOUR_OWN_DOCS_HERE.md
+│   ├── lost-signal-of-elara-7_en.md
+│   └── lost-signal-of-elara-7_ja.md
 ├── 01-basic-chat/                # Simple completion
 ├── 02-function-calling/          # Movie rating function
-├── 03-basic-rag/                 # Simple RAG with LlamaIndex
+├── 03-basic-rag/                 # Simple RAG using Ollama
 ├── 04-function-rag-decision/     # Using functions to trigger RAG
 └── 05-two-step-completion/       # Plain completion for RAG decisions
 ```
 
 ## Workshop Stages
 
-### Stage 1: Basic Chat (15 minutes)
+### Stage 1: Basic Chat (No RAG)
 
 **Objective:** Create a simple chat interface using OpenAI completions API.
 
 **Features:**
 - Express server with REST API
 - Basic HTML/CSS chat interface
-- OpenAI API integration
+- Using Ollama via OpenAI API compatible endpoint
 
 **Key Concepts:**
 - Setting up an AI chat application
 - Managing API requests and responses
-- Basic prompt engineering
 
-### Stage 2: Function Calling (15 minutes)
+### Stage 2: Function Calling
 
 **Objective:** Enhance the chat with function calling for movie ratings.
 
 **Features:**
 - Function definitions for the LLM
-- Movie rating database integration
-- UI enhancements to display ratings
+- Movie rating (fake) database integration
 
 **Key Concepts:**
 - OpenAI function calling
 - Structuring functions for LLM use
 - Parsing and handling function responses
 
-### Stage 3: Basic RAG (20 minutes)
+### Stage 3: Basic RAG
 
 **Objective:** Implement the core RAG pattern with LlamaIndex.
 
@@ -73,7 +71,7 @@ RAGTutorial/
 - Semantic search and similarity
 - Context window management
 
-### Stage 4: Function-Based RAG Decision (20 minutes)
+### Stage 4: Function-Based RAG Decision
 
 **Objective:** Use function calling to intelligently decide when to use RAG.
 
@@ -87,7 +85,7 @@ RAGTutorial/
 - Hybrid processing pipelines
 - Optimizing for relevance and performance
 
-### Stage 5: Two-Step Completion (20 minutes)
+### Stage 5: Two-Step Completion
 
 **Objective:** Separate the RAG decision and execution using a two-step approach.
 
@@ -101,42 +99,13 @@ RAGTutorial/
 - Structured LLM outputs
 - Building more flexible RAG systems
 
-### Bonus: Ollama Integration
-
-**Objective:** Switch from OpenAI to local Ollama models.
-
-**Features:**
-- Built-in support for switching between OpenAI and Ollama
-- Compatible with all examples using the OpenAI API-compatible endpoint
-- Support for Ollama embedding models in RAG examples
-
-**Key Concepts:**
-- Working with open-source models
-- API compatibility between providers
-- Local vs. cloud deployment tradeoffs
-
-**Configuration:**
-All examples support both OpenAI and Ollama through environment variables:
-```
-# Set to false to use OpenAI (default is true)
-USE_OLLAMA=true
-
-# Base URL for Ollama API (default is http://localhost:11434)
-OLLAMA_BASE_URL=http://localhost:11434
-
-# Model name for completion (Ollama: llama3, mistral, etc. OpenAI: gpt-4o-mini, etc.)
-MODEL_NAME=llama3
-
-# For RAG examples, specify the embedding model when using Ollama
-EMBEDDING_MODEL_NAME=all-minilm:l6-v2
-```
-
 ## Getting Started
 
 1. Clone this repository
-2. Create a `.env` file in each project directory with your OpenAI API key:
+2. Using Ollama from the command line, get the model you want to use:
    ```
-   OPENAI_API_KEY=your_api_key_here
+   ollama pull qwen2.5:3b
+   ollama pull all-minilm:l6-v2
    ```
 3. Install dependencies for the example you want to run:
    ```
@@ -149,9 +118,19 @@ EMBEDDING_MODEL_NAME=all-minilm:l6-v2
    ```
 5. Open http://localhost:3000 in your browser
 
+If you want to use a different model, copy the `.env.example` file to `.env` and set the model name. Example:
+
+```
+USE_OLLAMA=true
+OLLAMA_BASE_URL=http://localhost:11434
+
+MODEL_NAME=llama3 # Change this to a model you have installed
+
+EMBEDDING_MODEL_NAME=all-minilm:l6-v2
+```
+
 ## Resources
 
 - [OpenAI API Documentation](https://platform.openai.com/docs/)
-- [LlamaIndex Documentation](https://docs.llamaindex.ai/)
 - [Ollama Project](https://ollama.ai/)
 - [Node.js Documentation](https://nodejs.org/en/docs/)
