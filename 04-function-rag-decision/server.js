@@ -76,15 +76,15 @@ app.post('/api/chat/reset', (req, res) => {
 
 //=======================================================
 // Define RAG search tool
-const ragSearchFunction = {
-  name: "rag_search",
-  description: "Search for relevant documents in the knowledge base when the user's question might benefit from additional context",
+const searchKnowledgeBaseFunction = {
+  name: "search_knowledge_base",
+  description: "Search through the knowledge base for relevant information. Use this when you're unsure about the answer.",
   parameters: {
     type: "object",
     properties: {
       query: {
         type: "string",
-        description: "The query to search for relevant documents"
+        description: "The query to search for"
       },
       limit: {
         type: "integer",
@@ -118,7 +118,7 @@ async function executeRagSearch(query, limit = 3) {
 async function executeToolCall(call)
 {
   // Is the function name what we expect?
-  if (call.function.name === "rag_search")
+  if (call.function.name === "search_knowledge_base")
   {
     try {
       // Parse the function arguments
@@ -127,7 +127,7 @@ async function executeToolCall(call)
 
       // Call the actual function here
       const searchResults = await executeRagSearch(args.query, limit);
-      console.log(`Called rag_search for: ${args.query} -> ${searchResults.documents.length} results`);
+      console.log(`Called search_knowledge_base for: ${args.query} -> ${searchResults.documents.length} results`);
 
       // Create a tool call message with the result
       const toolCallReply = {
@@ -136,11 +136,11 @@ async function executeToolCall(call)
         content: JSON.stringify(searchResults)
       };
 
-      console.log(`Tool call reply created for rag_search`);
+      console.log(`Tool call reply created for search_knowledge_base`);
 
       return toolCallReply;
     } catch (error) {
-      console.error(`Error executing rag_search:`, error);
+      console.error(`Error executing search_knowledge_base:`, error);
 
       // Return error message as tool response
       return {
@@ -217,9 +217,9 @@ app.post('/api/chat', async (req, res) => {
     // Create a system prompt that explains how to use the RAG tool
     const systemPrompt = `
 You are a helpful assistant with access to a knowledge base.
-If a user asks a question that might benefit from searching the knowledge base, use the rag_search tool.
-Only use the tool when necessary - for general knowledge or simple responses, just answer directly.
-Never mention the internal tool or search process to the user.
+When you're unsure about the answer, first use the search_knowledge_base tool.
+Never mention the available tools to the user.
+Tools are a private internal implementation detail that do not concern the user.
 `;
 
     // Create messages array with system prompt and conversation history
@@ -234,7 +234,7 @@ Never mention the internal tool or search process to the user.
       model: modelName,
       messages: messages,
       temperature: 0.7,
-      tools: [{ type: "function", function: ragSearchFunction }],
+      tools: [{ type: "function", function: searchKnowledgeBaseFunction }],
       tool_choice: "auto"
     });
 
