@@ -1,0 +1,35 @@
+# ワークショップ前インストール要件
+==================================
+
+以下のソフトウェアがお使いのコンピュータにインストールされていることを確認してください：
+
+1. Node.js（v14以降）：
+   - Windows/macOS: https://nodejs.org/ からダウンロードしてインストール
+   - macOS（代替方法）: Homebrewで`brew install node`でインストール
+   - Linux: ディストリビューションのパッケージマネージャーでインストール（例：`sudo apt install nodejs npm`）
+
+2. Ollama:
+   - Windows: https://ollama.com/download/windows からダウンロードしてインストール
+   - macOS: https://ollama.com/download/mac からダウンロードしてインストール
+   - Linux: ターミナルで `curl -fsSL https://ollama.com/install.sh | sh` を実行
+
+3. 必要なAIモデル：
+   Ollamaをインストールした後、ターミナル/コマンドプロンプトを開いて以下を実行：
+   - `ollama pull qwen2.5:3b`（またはメモリが十分にある場合は `ollama pull qwen2.5:7b`）
+   - `ollama pull all-minilm:l6-v2`
+
+4. Git：
+   - Windows: https://git-scm.com/download/win からダウンロードしてインストール
+   - macOS: Homebrewで`brew install git`でインストール、またはXcode Command Line Toolsに付属
+   - Linux: ディストリビューションのパッケージマネージャーでインストール（例：`sudo apt install git`）
+
+5. お好みのテキストエディタまたはIDE（まだお持ちでない場合）：
+   - Visual Studio Codeがすべてのプラットフォームで利用可能で推奨されます：https://code.visualstudio.com/download
+
+ターミナル/コマンドプロンプトを開いて、以下のコマンドが動作することを確認してください：
+- `node --version`（v14.x.x以上が表示されるはず）
+- `npm --version`
+- `ollama list`（インストールされたモデルが表示されるはず）
+- `git --version`
+
+インストールに問題がある場合は、お知らせください。
