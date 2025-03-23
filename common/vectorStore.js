@@ -24,18 +24,19 @@ class VectorStore
     this.store = {};
     this.openaiClient = openaiClient;
     this.embeddingModelName = embeddingModelName || "nomic-embed-text";
+    this.log(`Using embedding model: ${this.embeddingModelName}`);
   }
 
   // Initialize the document store from a directory of markdown files
   //  @param {string} directoryPath - Path to the directory containing markdown documents
   async initializeFromDirectory(directoryPath) {
-    console.log('Initializing document store...');
-    console.log('Using in-memory vector store');
+    this.log('Initializing document store...');
+    this.log('Using in-memory vector store');
 
     // Load documents from the docs directory
     const docFiles = globSync('**/*.md', { cwd: directoryPath });
 
-    console.log(`Found ${docFiles.length} documents to index`);
+    this.log(`Found ${docFiles.length} documents to index`);
 
     for (const file of docFiles) {
       const filePath = path.join(directoryPath, file);
@@ -44,7 +45,7 @@ class VectorStore
       // Create chunks from the content
       const chunks = splitIntoChunks(content);
 
-      console.log(`Processing ${file}: ${chunks.length} chunks`);
+      this.log(`Processing ${file}: ${chunks.length} chunks`);
 
       // Get embeddings for chunks
       const embeddings = await this.getEmbeddings(chunks);
@@ -61,7 +62,7 @@ class VectorStore
       }
     }
 
-    console.log('Documents indexed successfully');
+    this.log('Documents indexed successfully');
   }
 
   // Add a document to the vector store
@@ -175,6 +176,10 @@ class VectorStore
 
     // Search using the embedding
     return this.searchByEmbedding(queryEmbedding[0], topK);
+  }
+
+  log(message) {
+    console.log(`[VectorStore] ${message}`);
   }
 }
 
