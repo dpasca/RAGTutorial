@@ -97,7 +97,7 @@ const searchKnowledgeBaseFunction = {
 
 //=======================================================
 // Function to execute RAG search
-async function executeRagSearch(query, limit = 3) {
+async function searchKnowledgeBase(query, limit = 3) {
   // Make sure document store is initialized
   if (vectorStore.isEmpty()) {
     throw new Error('Document store is still initializing');
@@ -120,35 +120,37 @@ async function executeToolCall(call)
   // Is the function name what we expect?
   if (call.function.name === "search_knowledge_base")
   {
+    let returnContent = null;
+
     try {
       // Parse the function arguments
       const args = JSON.parse(call.function.arguments);
       const limit = args.limit || 3;
 
       // Call the actual function here
-      const searchResults = await executeRagSearch(args.query, limit);
+      const searchResults = await searchKnowledgeBase(args.query, limit);
       console.log(`Called search_knowledge_base for: ${args.query} -> ${searchResults.documents.length} results`);
 
-      // Create a tool call message with the result
-      const toolCallReply = {
-        role: "tool",
-        tool_call_id: call.id,
-        content: JSON.stringify(searchResults)
-      };
+      // Good content to return
+      returnContent = searchResults;
 
-      console.log(`Tool call reply created for search_knowledge_base`);
-
-      return toolCallReply;
-    } catch (error) {
-      console.error(`Error executing search_knowledge_base:`, error);
-
-      // Return error message as tool response
-      return {
-        role: "tool",
-        tool_call_id: call.id,
-        content: JSON.stringify({ error: error.message })
-      };
+      console.log(`Tool call reply created for ${call.function.name}`);
     }
+    catch (error)
+    {
+      console.error(`Error executing ${call.function.name}:`, error);
+      // Return an error message as "content"
+      returnContent = JSON.stringify({ error: error.message });
+    }
+
+    // Create a tool call message with the result
+    const toolCallReply = {
+      role: "tool",
+      tool_call_id: call.id,
+      content: JSON.stringify(returnContent)
+    };
+
+    return toolCallReply;
   }
 
   console.warn(`Unknown function call: ${call.function.name}`);
