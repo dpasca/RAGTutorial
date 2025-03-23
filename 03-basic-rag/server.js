@@ -81,15 +81,10 @@ app.post('/api/chat', async (req, res) => {
     const documentMetadatas = queryResult.metadatas || [];
 
     // Create a prompt that includes the retrieved context
-    const prompt = `
-I want you to answer the user's question based on the following context.
-If the context doesn't contain relevant information to answer the question,
-just say that you don't have enough information and answer based on your general knowledge.
-
-Context:
+    const prompt = `${message}
+<AdditionalContextProvidedByTheSystem>
 ${retrievedContext}
-
-User question: ${message}
+</AdditionalContextProvidedByTheSystem>
 `;
 
     // Call LLM API with the augmented prompt
