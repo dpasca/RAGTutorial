@@ -84,14 +84,14 @@ app.post('/api/chat', async (req, res) => {
     });
 
     // Extract and send the response
-    const aiResponse = completion.choices[0].message.content;
+    const assistantMessage = completion.choices[0].message;
 
     // Add the user and assistant messages to the conversation history
     conversationHistory.push({ role: "user", content: userMessage });
-    conversationHistory.push({ role: "assistant", content: aiResponse });
+    conversationHistory.push({ role: "assistant", content: assistantMessage.content });
     trimConversationHistory();
 
-    res.json({ response: aiResponse });
+    res.json({ response: assistantMessage.content });
   } catch (error) {
     console.error('Error in chat endpoint:', error);
     res.status(500).json({

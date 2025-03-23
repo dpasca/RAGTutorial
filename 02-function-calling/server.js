@@ -88,27 +88,17 @@ app.post('/api/chat/reset', (req, res) => {
 });
 
 //=======================================================
-function makeToolCallReply(assistantMessage)
+function executeToolCall(call)
 {
-  // Check if the model wants to call a function
-  if (!assistantMessage.tool_calls)
-    return null;
-
-  const call = assistantMessage.tool_calls[0];
-
-  console.log(`Function call detected for ${call.function.name}`);
-
   // Is the function name what we expect ?
   if (call.function.name === "get_movie_rating")
   {
     // Parse the function arguments
     const args = JSON.parse(call.function.arguments);
-    const movieTitle = args.movieTitle;
 
-    // Get the movie rating from our database
-    const movieRating = getMovieRating(movieTitle);
-
-    console.log(`get_movie_rating: ${movieTitle} -> ${movieRating}`);
+    // Call the actual function here !
+    const movieRating = getMovieRating(args.movieTitle);
+    console.log(`Called get_movie_rating: ${args.movieTitle} -> ${movieRating}`);
 
     // Create a tool call message with the result
     const toolCallReply = {
@@ -116,6 +106,8 @@ function makeToolCallReply(assistantMessage)
         tool_call_id: call.id,
         content: JSON.stringify(movieRating)
     };
+
+    console.log(`Tool call reply: ${JSON.stringify(toolCallReply)}`);
 
     return toolCallReply;
   }
@@ -125,42 +117,48 @@ function makeToolCallReply(assistantMessage)
 }
 
 //=======================================================
-async function handleToolCall(assistantMessage, messages, userMessage)
+async function handleToolCalls(assistantMessage, messages, userMessage)
 {
+  if (assistantMessage.tool_calls.length > 1)
+    console.warning(`Multiple tool calls detected, only the first one will be executed`);
+
   const call = assistantMessage.tool_calls[0];
 
-  console.log(`Function/tool call detected for ${call.function.name}`);
+  console.log(`Function call detected for ${call.function.name}`);
 
   // Resolve the function call
-  const toolCallReply = makeToolCallReply(assistantMessage);
-
+  const toolCallReply = executeToolCall(call);
   // ...if the function call was resolved, then "secondMessages" will be an array
   if (toolCallReply)
   {
+    console.log(`Function call resolved for ${call.function.name}`);
+
     const messagesWithToolCall = [
       ...messages,
       assistantMessage,
       toolCallReply,
     ];
 
+    console.log(`Calling LLM with function call result`);
+
     // Call the API _again_, but with the function response
-    const secondCompletion = await openai.chat.completions.create({
+    const newCompletion = await openai.chat.completions.create({
       model: modelName,
       messages: messagesWithToolCall,
       temperature: 0.7
     });
 
-    // Get the new response
-    const aiResponse = secondCompletion.choices[0].message.content;
+    // The new assistant message, after the function call
+    const newAssistantMessage = newCompletion.choices[0].message;
 
     // Store the full conversation including function calls in history
     conversationHistory.push({role: "user", content: userMessage});
     conversationHistory.push(assistantMessage);
     conversationHistory.push(toolCallReply);
-    conversationHistory.push({role: "assistant", content: aiResponse});
+    conversationHistory.push({role: "assistant", content: newAssistantMessage.content});
     trimConversationHistory(); // Limit history size
 
-    return aiResponse;
+    return newAssistantMessage;
   }
 
   return null;
@@ -197,18 +195,17 @@ app.post('/api/chat', async (req, res) => {
     // Check if the model wants to call a function
     if (assistantMessage.tool_calls)
     {
-      const aiResponse = await handleToolCall(assistantMessage, messages, userMessage);
-      if (aiResponse)
-        return res.json({ response: aiResponse });
+      const newAssistantMessage = await handleToolCalls(assistantMessage, messages, userMessage);
+      if (newAssistantMessage)
+        return res.json({ response: newAssistantMessage.content });
     }
 
     // If no function call, just add to history and return the response
-    const aiResponse = assistantMessage.content;
     conversationHistory.push({ role: "user", content: userMessage });
-    conversationHistory.push({ role: "assistant", content: aiResponse });
+    conversationHistory.push({ role: "assistant", content: assistantMessage.content });
     trimConversationHistory(); // Limit history size
 
-    return res.json({ response: aiResponse });
+    return res.json({ response: assistantMessage.content });
   } catch (error) {
     console.error('Error in chat endpoint:', error);
     res.status(500).json({
