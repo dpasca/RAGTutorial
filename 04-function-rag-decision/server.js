@@ -3,19 +3,12 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { OpenAI } = require('openai');
-const {
-  SimpleDirectoryReader,
-  VectorStoreIndex,
-  serviceContextFromDefaults,
-  OpenAIEmbedding,
-  OllamaEmbedding
-} = require('llamaindex');
+const { VectorStore } = require('../common/vectorStore');
 
 // Initialize Express app
 const app = express();
 const port = 3000;
 
-//=======================================================
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -47,186 +40,256 @@ const modelName = getModelName();
 console.log(`Using model: ${modelName}`);
 
 //=======================================================
-// Set up LlamaIndex
-let _index; // Will hold our document index
+// Initialize the vector store
+const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
+const vectorStore = new VectorStore(openai, embeddingModel);
 
-//=======================================================
-// Function to initialize the index
-async function initializeIndex()
+// Simple in-memory conversation history for the demo
+const conversationHistory = [];
+
+// Avoid history growing too large
+function trimConversationHistory()
 {
-  console.log('Initializing document index...');
-
-  const useOllama = process.env.USE_OLLAMA !== "false";
-  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-
-  // Configure service context based on provider
-  let serviceContextConfig = {
-    llm: {
-      model: modelName,
-      temperature: 0.7,
-    }
-  };
-
-  // Set up the embedding model and LLM configuration based on provider
-  if (useOllama) {
-    // For Ollama
-    const embeddingModel = process.env.EMBEDDING_MODEL_NAME || "all-minilm:l6-v2";
-    console.log(`Using Ollama embedding model: ${embeddingModel}`);
-
-    serviceContextConfig.llm.baseUrl = `${ollamaBaseUrl}/v1`;
-    serviceContextConfig.embedModel = new OllamaEmbedding({
-      modelName: embeddingModel,
-      baseUrl: ollamaBaseUrl
-    });
-  } else {
-    // For OpenAI
-    console.log('Using OpenAI embeddings');
-
-    serviceContextConfig.llm.apiKey = process.env.OPENAI_API_KEY;
-    serviceContextConfig.embedModel = new OpenAIEmbedding({
-      apiKey: process.env.OPENAI_API_KEY
-    });
-  }
-
-  const serviceContext = serviceContextFromDefaults(serviceContextConfig);
-
-  // Read documents from the docs directory
-  const reader = new SimpleDirectoryReader();
-  const documents = await reader.loadData('../docs');
-  console.log(`Loaded ${documents.length} documents`);
-
-  // Create a vector store index from the documents
-  _index = await VectorStoreIndex.fromDocuments(documents, { serviceContext });
-  console.log('Index created successfully');
+  if (conversationHistory.length > 20)
+    conversationHistory.splice(0, 4);
 }
 
 //=======================================================
-// Define function for determining if RAG is needed
-const determineRagNeedFunction = {
-  name: "determine_rag_need",
-  description: "Determine if retrieval is needed to answer the user's question",
+// Function to initialize the document store
+async function initializeDocumentStore() {
+  // Load documents from the docs directory
+  const docsDir = path.join(__dirname, '../docs');
+
+  // Initialize the vector store with documents from the directory
+  await vectorStore.initializeFromDirectory(docsDir);
+}
+
+//=======================================================
+// API endpoint to reset conversation history
+app.post('/api/chat/reset', (req, res) => {
+  // Clear the conversation history
+  conversationHistory.length = 0;
+
+  // Send success response
+  res.json({ success: true, message: 'Conversation history has been reset' });
+});
+
+//=======================================================
+// Define RAG search tool
+const ragSearchFunction = {
+  name: "rag_search",
+  description: "Search for relevant documents in the knowledge base when the user's question might benefit from additional context",
   parameters: {
     type: "object",
     properties: {
-      needsRetrieval: {
-        type: "boolean",
-        description: "Whether retrieval is needed to answer the question"
-      },
-      rationale: {
+      query: {
         type: "string",
-        description: "Reasoning behind the decision"
+        description: "The query to search for relevant documents"
       },
-      topicsToRetrieve: {
-        type: "array",
-        items: {
-          type: "string"
-        },
-        description: "Key topics or terms to focus retrieval on"
+      limit: {
+        type: "integer",
+        description: "Maximum number of documents to retrieve (default: 3)"
       }
     },
-    required: ["needsRetrieval", "rationale"]
+    required: ["query"]
   }
 };
 
 //=======================================================
-// API endpoint for chat
+// Function to execute RAG search
+async function executeRagSearch(query, limit = 3) {
+  // Make sure document store is initialized
+  if (vectorStore.isEmpty()) {
+    throw new Error('Document store is still initializing');
+  }
+
+  // Search for similar documents using the vector store
+  const queryResult = await vectorStore.search(query, limit);
+
+  return {
+    documents: queryResult.documents || [],
+    scores: queryResult.scores || [],
+    metadatas: queryResult.metadatas || []
+  };
+}
+
+//=======================================================
+// Function to execute tool calls
+async function executeToolCall(call)
+{
+  // Is the function name what we expect?
+  if (call.function.name === "rag_search")
+  {
+    try {
+      // Parse the function arguments
+      const args = JSON.parse(call.function.arguments);
+      const limit = args.limit || 3;
+
+      // Call the actual function here
+      const searchResults = await executeRagSearch(args.query, limit);
+      console.log(`Called rag_search for: ${args.query} -> ${searchResults.documents.length} results`);
+
+      // Create a tool call message with the result
+      const toolCallReply = {
+        role: "tool",
+        tool_call_id: call.id,
+        content: JSON.stringify(searchResults)
+      };
+
+      console.log(`Tool call reply created for rag_search`);
+
+      return toolCallReply;
+    } catch (error) {
+      console.error(`Error executing rag_search:`, error);
+
+      // Return error message as tool response
+      return {
+        role: "tool",
+        tool_call_id: call.id,
+        content: JSON.stringify({ error: error.message })
+      };
+    }
+  }
+
+  console.warn(`Unknown function call: ${call.function.name}`);
+  return null;
+}
+
+//=======================================================
+// Handle tool calls
+async function handleToolCalls(assistantMessage, messages, userMessage) {
+  if (assistantMessage.tool_calls.length > 1)
+    console.warn(`Multiple tool calls detected, only the first one will be executed`);
+
+  const call = assistantMessage.tool_calls[0];
+
+  console.log(`Function call detected for ${call.function.name}`);
+
+  // Resolve the function call
+  const toolCallReply = await executeToolCall(call);
+
+  // If the function call was resolved
+  if (toolCallReply) {
+    console.log(`Function call resolved for ${call.function.name}`);
+
+    const messagesWithToolCall = [
+      ...messages,
+      assistantMessage,
+      toolCallReply,
+    ];
+
+    console.log(`Calling LLM with function call result`);
+
+    // Call the API again, but with the function response
+    const newCompletion = await openai.chat.completions.create({
+      model: modelName,
+      messages: messagesWithToolCall,
+      temperature: 0.7
+    });
+
+    // The new assistant message, after the function call
+    const newAssistantMessage = newCompletion.choices[0].message;
+
+    // Store the full conversation including function calls in history
+    conversationHistory.push({role: "user", content: userMessage});
+    conversationHistory.push(assistantMessage);
+    conversationHistory.push(toolCallReply);
+    conversationHistory.push({role: "assistant", content: newAssistantMessage.content});
+    trimConversationHistory(); // Limit history size
+
+    return newAssistantMessage;
+  }
+
+  return null;
+}
+
+//=======================================================
+// API endpoint for chat with RAG as a tool
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
+    const userMessage = message;
 
-    if (!message) {
+    if (!userMessage) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Make sure index is initialized
-    if (!_index) {
-      return res.status(503).json({
-        error: 'Document index is still initializing. Please try again in a moment.'
-      });
-    }
-
-    // First determine if RAG is needed using function calling
-    const ragDecisionCompletion = await openai.chat.completions.create({
-      model: modelName,
-      messages: [
-        {
-          role: "system",
-          content: `You're helping determine whether retrieval is needed to answer the user's question.
-                   Our knowledge base contains information about: AI history, quantum computing, and nutrition facts.
-                   If the question is about these topics or might benefit from specific factual information, suggest retrieval.
-                   If the question is general, subjective, or not related to our knowledge base topics, retrieval is not needed.`
-        },
-        { role: "user", content: message }
-      ],
-      tools: [{ type: "function", function: determineRagNeedFunction }],
-      tool_choice: { type: "function", function: { name: "determine_rag_need" } }
-    });
-
-    // Get the function call response
-    const functionCall = ragDecisionCompletion.choices[0].message.tool_calls[0];
-    const ragDecision = JSON.parse(functionCall.function.arguments);
-
-    let finalResponse;
-    let retrievalMetadata = null;
-
-    if (ragDecision.needsRetrieval) {
-      // Perform retrieval to get relevant context
-      const queryEngine = _index.asQueryEngine();
-      const retrievalResult = await queryEngine.query(message);
-
-      // Get the text from the nodes that were retrieved
-      const retrievedContext = retrievalResult.sourceNodes.map(node =>
-        node.text
-      ).join('\n\n');
-
-      // Create a prompt that includes the retrieved context
-      const prompt = `
-I want you to answer the user's question based on the following context.
-If the context doesn't contain relevant information to answer the question,
-just say that you don't have enough information and answer based on your general knowledge.
-
-Context:
-${retrievedContext}
-
-User question: ${message}
+    // Create a system prompt that explains how to use the RAG tool
+    const systemPrompt = `
+You are a helpful assistant with access to a knowledge base.
+If a user asks a question that might benefit from searching the knowledge base, use the rag_search tool.
+Only use the tool when necessary - for general knowledge or simple responses, just answer directly.
+Never mention the internal tool or search process to the user.
 `;
 
-      // Call LLM API with the augmented prompt
-      const completion = await openai.chat.completions.create({
-        model: modelName,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-      });
+    // Create messages array with system prompt and conversation history
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory,
+      { role: "user", content: userMessage }
+    ];
 
-      finalResponse = completion.choices[0].message.content;
+    // Call LLM API with function calling and conversation history
+    const completion = await openai.chat.completions.create({
+      model: modelName,
+      messages: messages,
+      temperature: 0.7,
+      tools: [{ type: "function", function: ragSearchFunction }],
+      tool_choice: "auto"
+    });
 
-      // Include retrieval metadata
-      retrievalMetadata = {
-        retrievedDocuments: retrievalResult.sourceNodes.map(node => ({
-          text: node.text.substring(0, 150) + '...',
-          score: node.score
-        }))
-      };
-    } else {
-      // If RAG is not needed, just call the API directly
-      const completion = await openai.chat.completions.create({
-        model: modelName,
-        messages: [{ role: "user", content: message }],
-        temperature: 0.7,
-      });
+    // Extract the assistant message
+    const assistantMessage = completion.choices[0].message;
 
-      finalResponse = completion.choices[0].message.content;
+    // Check if the model wants to call a function
+    if (assistantMessage.tool_calls) {
+      const newAssistantMessage = await handleToolCalls(assistantMessage, messages, userMessage);
+      if (newAssistantMessage) {
+        // Extract the RAG results from the tool call reply
+        let retrievedDocuments = [];
+        let documentScores = [];
+        let documentMetadatas = [];
+
+        // Find the tool reply in conversation history (it was just added)
+        const toolReplyIndex = conversationHistory.findIndex(msg =>
+          msg.role === "tool" && msg.tool_call_id === assistantMessage.tool_calls[0].id
+        );
+
+        if (toolReplyIndex !== -1) {
+          try {
+            const toolResults = JSON.parse(conversationHistory[toolReplyIndex].content);
+            retrievedDocuments = toolResults.documents || [];
+            documentScores = toolResults.scores || [];
+            documentMetadatas = toolResults.metadatas || [];
+          } catch (e) {
+            console.error("Error parsing tool results:", e);
+          }
+        }
+
+        return res.json({
+          response: newAssistantMessage.content,
+          metadata: {
+            ragUsed: true,
+            retrievedDocuments: retrievedDocuments.map((text, i) => ({
+              text: text.length > 150 ? text.substring(0, 150) + '...' : text,
+              score: documentScores[i],
+              source: documentMetadatas[i]?.source
+            }))
+          }
+        });
+      }
     }
 
-    // Return the response with the RAG decision and any retrieval metadata
-    res.json({
-      response: finalResponse,
-      ragDecision: {
-        needsRetrieval: ragDecision.needsRetrieval,
-        rationale: ragDecision.rationale,
-        topicsToRetrieve: ragDecision.topicsToRetrieve || []
-      },
-      metadata: retrievalMetadata
+    // If no function call, just add to history and return the response
+    conversationHistory.push({ role: "user", content: userMessage });
+    conversationHistory.push({ role: "assistant", content: assistantMessage.content });
+    trimConversationHistory(); // Limit history size
+
+    return res.json({
+      response: assistantMessage.content,
+      metadata: {
+        ragUsed: false
+      }
     });
   } catch (error) {
     console.error('Error in chat endpoint:', error);
@@ -238,13 +301,13 @@ User question: ${message}
 });
 
 //=======================================================
-// Start the server and initialize the index
+// Start the server and initialize the document store
 app.listen(port, async () => {
   console.log(`Server is running at http://localhost:${port}`);
 
   try {
-    await initializeIndex();
+    await initializeDocumentStore();
   } catch (error) {
-    console.error('Error initializing index:', error);
+    console.error('Error during startup:', error);
   }
 });

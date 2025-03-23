@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Function-Based RAG Decision - RAG Tutorial</title>
+  <title>Function-Calling RAG Chat - RAG Tutorial</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Smart RAG Decision Chat</h1>
-      <p>Using function calling to decide when to retrieve knowledge</p>
+      <h1>RAG-Powered Chat</h1>
+      <p>Chat with AI using Retrieval-Augmented Generation</p>
+      <button id="toggle-context">Show Context</button>
     </header>
 
     <main>
@@ -18,36 +19,30 @@
         <div id="chat-history"></div>
       </div>
 
+      <div class="preset-buttons">
+        <button type="button" class="preset-button" data-text="hi">hi</button>
+        <button type="button" class="preset-button" data-text="こんにちは">こんにちは</button>
+        <button type="button" class="preset-button" data-text="what happened on April 15?">what happened on April 15?</button>
+        <button type="button" class="preset-button" data-text="4月15日に何があったの？">4月15日に何があったの？</button>
+      </div>
       <form id="chat-form">
-        <input type="text" id="user-input" placeholder="Ask anything. The system will decide if RAG is needed..." autocomplete="off">
+        <input type="text" id="user-input"
+          placeholder="Try 'what happened on April 15?'... '4月15日に何があったの？'..."
+          autocomplete="off">
         <button type="submit">Send</button>
+        <button type="button" id="reset-button" class="reset-button">Reset</button>
       </form>
     </main>
 
-    <aside id="info-panel" class="collapsed">
-      <div class="info-toggle">
-        <button id="toggle-info">i</button>
+    <aside id="context-panel" style="display: none;">
+      <div class="context-header">
+        <h3>Retrieved Context</h3>
       </div>
-
-      <div class="info-content">
-        <div class="info-section">
-          <h3>RAG Decision</h3>
-          <div id="rag-decision-display">
-            <p class="no-data">No data yet</p>
-          </div>
-        </div>
-
-        <div class="info-section">
-          <h3>Retrieved Context</h3>
-          <div id="context-display">
-            <p class="no-data">No data yet</p>
-          </div>
-        </div>
-      </div>
+      <div class="context-content"></div>
     </aside>
 
     <footer>
-      <p>Stage 4 of the RAG Tutorial Workshop</p>
+      <p>Stage 3 of the RAG Tutorial Workshop</p>
     </footer>
   </div>
 
@@ -56,18 +51,30 @@
       const chatForm = document.getElementById('chat-form');
       const userInput = document.getElementById('user-input');
       const chatHistory = document.getElementById('chat-history');
-      const infoPanel = document.getElementById('info-panel');
-      const ragDecisionDisplay = document.getElementById('rag-decision-display');
-      const contextDisplay = document.getElementById('context-display');
-      const toggleInfoBtn = document.getElementById('toggle-info');
+      const contextPanel = document.getElementById('context-panel');
+      const contextContent = document.querySelector('.context-content');
+      const toggleContextBtn = document.getElementById('toggle-context');
 
-      let infoPanelVisible = false;
+      // Set up context panel toggle
+      let retrievedContextVisible = false;
 
-      // Toggle info panel visibility
-      toggleInfoBtn.addEventListener('click', () => {
-        infoPanelVisible = !infoPanelVisible;
-        infoPanel.classList.toggle('collapsed', !infoPanelVisible);
+      // Toggle context panel visibility
+      toggleContextBtn.addEventListener('click', () => {
+        retrievedContextVisible = !retrievedContextVisible;
+        contextPanel.style.display = retrievedContextVisible ? 'flex' : 'none';
+        toggleContextBtn.textContent = retrievedContextVisible ? 'Hide Context' : 'Show Context';
       });
+
+      // Set up preset buttons
+      const presetButtons = document.querySelectorAll('.preset-button');
+      presetButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const text = button.getAttribute('data-text');
+          userInput.value = text;
+          userInput.focus();
+        });
+      });
+
 
       // Function to add a message to the chat history
       function addMessageToChat(message, sender) {
@@ -84,45 +91,14 @@
         chatHistory.scrollTop = chatHistory.scrollHeight;
       }
 
-      // Function to update the RAG decision display
-      function updateRagDecision(decision) {
-        if (!decision) {
-          ragDecisionDisplay.innerHTML = '<p class="no-data">No data available</p>';
-          return;
-        }
-
-        let topicsHtml = '';
-        if (decision.topicsToRetrieve && decision.topicsToRetrieve.length > 0) {
-          topicsHtml = `
-            <div class="topics">
-              <h4>Topics to Retrieve:</h4>
-              <ul>
-                ${decision.topicsToRetrieve.map(topic => `<li>${topic}</li>`).join('')}
-              </ul>
-            </div>
-          `;
-        }
-
-        ragDecisionDisplay.innerHTML = `
-          <div class="decision ${decision.needsRetrieval ? 'retrieval-yes' : 'retrieval-no'}">
-            <div class="decision-header">
-              <span class="decision-icon">${decision.needsRetrieval ? '📚' : '🧠'}</span>
-              <span class="decision-label">${decision.needsRetrieval ? 'Using RAG' : 'Using Model Knowledge'}</span>
-            </div>
-            <p class="rationale">${decision.rationale}</p>
-            ${topicsHtml}
-          </div>
-        `;
-      }
-
-      // Function to update the context display
-      function updateContextDisplay(documents) {
+      // Function to update context panel
+      function updateContextPanel(documents) {
         if (!documents || documents.length === 0) {
-          contextDisplay.innerHTML = '<p class="no-data">No documents retrieved</p>';
+          contextContent.innerHTML = '<p class="no-context">No relevant documents were retrieved.</p>';
           return;
         }
 
-        contextDisplay.innerHTML = '';
+        contextContent.innerHTML = '';
         documents.forEach((doc, index) => {
           const docElement = document.createElement('div');
           docElement.classList.add('context-item');
@@ -135,9 +111,50 @@
             <p class="context-text">${doc.text}</p>
           `;
 
-          contextDisplay.appendChild(docElement);
+          contextContent.appendChild(docElement);
         });
+
+        // Show the context panel automatically when there's new content
+        if (!retrievedContextVisible && documents.length > 0) {
+          toggleContextBtn.click();
+        }
       }
+
+            // Function to reset the chat
+      async function resetChat() {
+        // Clear chat history on the UI
+        chatHistory.innerHTML = '';
+
+        // Clear input field
+        userInput.value = '';
+
+        // Hide context panel
+        if (retrievedContextVisible) {
+          retrievedContextVisible = false;
+          contextPanel.style.display = 'none';
+          toggleContextBtn.textContent = 'Show Context';
+        }
+
+        // Clear context content
+        contextContent.innerHTML = '';
+
+        // Reset conversation history on the server
+        try {
+          await fetch('/api/chat/reset', {
+            method: 'POST',
+          });
+
+          // Add system message
+          addMessageToChat('Chat has been reset.', 'assistant');
+        } catch (error) {
+          console.error('Error resetting chat:', error);
+          addMessageToChat('Failed to reset chat on the server.', 'error');
+        }
+      }
+
+      // Set up reset button
+      const resetButton = document.getElementById('reset-button');
+      resetButton.addEventListener('click', resetChat);
 
       // Handle form submission
       chatForm.addEventListener('submit', async (e) => {
@@ -155,7 +172,7 @@
         // Show loading indicator
         const loadingElement = document.createElement('div');
         loadingElement.classList.add('message', 'assistant', 'loading');
-        loadingElement.textContent = 'Thinking...';
+        loadingElement.textContent = 'Searching and generating response...';
         chatHistory.appendChild(loadingElement);
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
@@ -178,21 +195,9 @@
             // Add AI response to chat
             addMessageToChat(data.response, 'assistant');
 
-            // Update the decision display
-            if (data.ragDecision) {
-              updateRagDecision(data.ragDecision);
-            }
-
-            // Update the context display
+            // Update the context panel with retrieved documents
             if (data.metadata && data.metadata.retrievedDocuments) {
-              updateContextDisplay(data.metadata.retrievedDocuments);
-            } else {
-              updateContextDisplay(null);
-            }
-
-            // Show the info panel if it's not already visible
-            if (!infoPanelVisible) {
-              toggleInfoBtn.click();
+              updateContextPanel(data.metadata.retrievedDocuments);
             }
           } else {
             // Show detailed error message when available
