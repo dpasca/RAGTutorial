@@ -170,9 +170,26 @@ async function handleToolCalls(assistantMessage, messages, userMessage) {
   // Resolve the function call
   const toolCallReply = await executeToolCall(call);
 
+  // Track RAG results
+  let debug_ragResults = null;
+
   // If the function call was resolved
   if (toolCallReply) {
     console.log(`Function call resolved for ${call.function.name}`);
+
+    // Extract RAG results if this was a knowledge base search
+    if (call.function.name === "search_knowledge_base") {
+      try {
+        const toolResults = JSON.parse(toolCallReply.content);
+        debug_ragResults = {
+          documents: toolResults.documents || [],
+          scores: toolResults.scores || [],
+          metadatas: toolResults.metadatas || []
+        };
+      } catch (e) {
+        console.error("Error parsing RAG results:", e);
+      }
+    }
 
     const messagesWithToolCall = [
       ...messages,
@@ -199,10 +216,20 @@ async function handleToolCalls(assistantMessage, messages, userMessage) {
     conversationHistory.push({role: "assistant", content: newAssistantMessage.content});
     trimConversationHistory(); // Limit history size
 
-    return newAssistantMessage;
+    return { message: newAssistantMessage, debug_ragResults };
   }
 
-  return null;
+  return { message: null, debug_ragResults: null };
+}
+
+//=======================================================
+function formatRagResults(ragResults)
+{
+  return ragResults.documents.map((text, i) => ({
+    text: text.length > 150 ? text.substring(0, 150) + '...' : text,
+    score: ragResults.scores[i],
+    source: ragResults.metadatas[i]?.source
+  }));
 }
 
 //=======================================================
@@ -244,39 +271,21 @@ Tools are a private internal implementation detail that do not concern the user.
     const assistantMessage = completion.choices[0].message;
 
     // Check if the model wants to call a function
-    if (assistantMessage.tool_calls) {
-      const newAssistantMessage = await handleToolCalls(assistantMessage, messages, userMessage);
-      if (newAssistantMessage) {
-        // Extract the RAG results from the tool call reply
-        let retrievedDocuments = [];
-        let documentScores = [];
-        let documentMetadatas = [];
+    if (assistantMessage.tool_calls)
+    {
+      const { message: newAssistantMessage, debug_ragResults } =
+              await handleToolCalls(assistantMessage, messages, userMessage);
 
-        // Find the tool reply in conversation history (it was just added)
-        const toolReplyIndex = conversationHistory.findIndex(msg =>
-          msg.role === "tool" && msg.tool_call_id === assistantMessage.tool_calls[0].id
-        );
-
-        if (toolReplyIndex !== -1) {
-          try {
-            const toolResults = JSON.parse(conversationHistory[toolReplyIndex].content);
-            retrievedDocuments = toolResults.documents || [];
-            documentScores = toolResults.scores || [];
-            documentMetadatas = toolResults.metadatas || [];
-          } catch (e) {
-            console.error("Error parsing tool results:", e);
-          }
-        }
-
+      if (newAssistantMessage)
+      {
         return res.json({
+          // Return the response from the LLM
           response: newAssistantMessage.content,
+
+          // Return the RAG results for debugging/display purposes
           metadata: {
-            ragUsed: true,
-            retrievedDocuments: retrievedDocuments.map((text, i) => ({
-              text: text.length > 150 ? text.substring(0, 150) + '...' : text,
-              score: documentScores[i],
-              source: documentMetadatas[i]?.source
-            }))
+            ragUsed: debug_ragResults !== null,
+            retrievedDocuments: debug_ragResults ? formatRagResults(debug_ragResults) : []
           }
         });
       }
