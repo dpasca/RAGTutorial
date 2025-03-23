@@ -3,8 +3,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { OpenAI } = require('openai');
-const { globSync } = require('glob');
-const { VectorStore } = require('./vectorStore');
+const { VectorStore } = require('../common/vectorStore');
 
 // Initialize Express app
 const app = express();
@@ -122,7 +121,7 @@ User question: ${message}
   }
 });
 
-
+//=======================================================
 // Start the server and initialize the document store
 app.listen(port, async () => {
   console.log(`Server is running at http://localhost:${port}`);
