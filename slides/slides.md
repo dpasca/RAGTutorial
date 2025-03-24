@@ -6,28 +6,33 @@ backgroundColor: #fff
 ---
 
 # Retrieval-Augmented Generation (RAG) Workshop
+# 検索強化生成（RAG）ワークショップ
 
-A step-by-step guide to building and understanding RAG systems
-RAGシステムの構築と理解のためのステップバイステップガイド
+> A step-by-step guide to building and understanding RAG systems
+> RAGシステムの構築と理解のためのステップバイステップガイド
 
+<br>
+<br>
+<div style="text-align: right; font-size: 0.8em;">
 by Davide Pasca
+</div>
 
-(2025/03)
+<div style="text-align: right; font-size: 0.8em;">
+v 0.1
+</div>
 
 ---
 
 # What is RAG?
 
-**Retrieval-Augmented Generation (RAG)**:
+**Retrieval-Augmented Generation (RAG) `-` 検索強化生成（RAG）**
+- Fast fuzzy search + LLM intelligence `-` 高速なあいまい検索とLLMの知能
 
-- Fast fuzzy search + LLM intelligence
-- 高速なあいまい検索とLLMの知能
-
-**Benefits:**
+**Benefits: 利点:**
 - Extends knowledge of LLM to any document database
 - LLMの知識を任意のドキュメントデータベースに拡張
-- Language model can be small
-- 言語モデルは小さくても良い
+- The Language Model can be small (SML instead of LLM)
+- 言語モデルは小さくてもよい（LLMではなくSML）
 - Reliable responses (can mention sources)
 - 信頼性のある応答（ソースを言及可能）
 
@@ -38,11 +43,11 @@ by Davide Pasca
 A progressive approach to understanding and implementing RAG:
 RAGを理解し実装するための段階的アプローチ
 
-1. **Basic Chat** - Simple AI chat (no RAG) (基本的なチャット - シンプルなAIチャット（RAGなし）)
-2. **Function Calling** - AI chat with function-calling (関数呼び出し付きAIチャット)
-3. **Basic RAG** - Basic RAG pattern (基本的なRAGパターン)
-4. **Function-Based RAG Decision** - RAG with function-calling (関数呼び出しを用いたRAG)
-5. **Agentic RAG Decision** - RAG with agents (エージェントを用いたRAG)
+1. **Basic Chat** - Simple AI chat (no RAG) `-` 基本的なチャット - シンプルなAIチャット（RAGなし）
+2. **Function Calling** - AI chat with function-calling `-` 関数呼び出し付きAIチャット
+3. **Basic RAG** - Basic RAG pattern `-` 基本的なRAGパターン
+4. **Function-Based RAG Decision** - RAG with function-calling `-` 関数呼び出しを用いたRAG
+5. **Agentic RAG Decision** - RAG with agents `-` エージェントを用いたRAG
 
 ---
 
@@ -52,26 +57,26 @@ RAGを理解し実装するための段階的アプローチ
 シンプルなチャットインターフェースをOpenAI APIを使用して作成する
 
 **Features:**
-- Chat with Express server and REST API - ExpressサーバーとREST APIでのチャット
-- Using Ollama via OpenAI API compatible endpoint (OpenAI API互換エンドポイントを介したOllamaの使用)
+- Chat with Express server and REST API `-` ExpressサーバーとREST APIでのチャット
+- Using Ollama via OpenAI API compatible endpoint `-` OpenAI API互換エンドポイントを介したOllamaの使用
 
 **Key Concepts:**
-- De-facto standard "completions" API by OpenAI (OpenAIによる事実上の標準「completions」API)
-- Access to Ollama models via this endpoint (このエンドポイントを通じたOllamaモデルへのアクセス)
+- De-facto standard "completions" API by OpenAI `-` OpenAIによる事実上の標準「completions」API
+- Access to Ollama models via this endpoint `-` このエンドポイントを通じたOllamaモデルへのアクセス
 ---
 
 # Stage 1: Basic Chat (continued)
 
-1. Create a list of messages between "user" and "assistant"
-  「ユーザー」と「アシスタント」の間のメッセージリストを作成
-2. On user input, add new "user" messages to the history
-  ユーザー入力時に新しい「ユーザー」メッセージを履歴に追加
+1. Create a list of messages between `user` and `assistant`
+   `user`と`assistant`の間のメッセージリストを作成
+2. On user input, add new `user` messages to the history
+   ユーザー入力時に新しい`user`メッセージを履歴に追加
 3. Call Completions API with all messages
-  すべてのメッセージでCompletions APIを呼び出す
-4. Get "assistant" response and add it to the history
-  「アシスタント」の応答を取得して履歴に追加
+   すべてのメッセージでCompletions APIを呼び出す
+4. Get `assistant` response and add it to the history
+   `assistant`の応答を取得して履歴に追加
 5. Wait for next user input and repeat...
-  次のユーザー入力を待って繰り返す...
+   次のユーザー入力を待って繰り返す...
 
 ---
 
