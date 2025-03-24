@@ -8,6 +8,10 @@ A step-by-step tutorial for building and understanding Retrieval-Augmented Gener
 
 This workshop provides a hands-on introduction to RAG through progressive examples, from a basic chat application to sophisticated retrieval systems. Designed for beginners, it can be completed in approximately 1.5 hours.
 
+## Workshop Stages
+
+See [slides/slides.pdf](slides/slides.pdf) for the workshop slides.
+
 ## Prerequisites
 
 - Node.js installed (v14+ recommended)
@@ -37,10 +41,6 @@ RAGTutorial/
 ├── 04-function-rag-decision/     # Function-calling for RAG
 └── 05-agent-rag-decision/        # Agentic RAG
 ```
-
-## Workshop Stages
-
-See [slides/slides.pdf](slides/slides.pdf) for the workshop slides.
 
 ## Getting Started
 
