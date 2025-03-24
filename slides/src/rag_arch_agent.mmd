@@ -1,0 +1,16 @@
+flowchart LR
+    A[User Message] --> B{Agent LLM<br>give me<br>search query?}:::decision
+
+    %% Direct Path
+    B -->|No| D[Main LLM]:::secondary
+
+    %% RAG Path
+    B -->|Yes| C[Get Context<br>from RAG]:::tertiary
+
+    %% RAG Pipeline Steps
+    C --> E[User Message<br>+<br>Context]:::tertiary
+    E --> F[Main LLM]:::tertiary
+
+    %% Final Response
+    D --> G[Response]:::quaternary
+    F --> G
