@@ -50,16 +50,21 @@ See [slides/slides.pdf](slides/slides.pdf) for the workshop slides.
    ollama pull qwen2.5:3b
    ollama pull nomic-embed-text
    ```
-3. Install dependencies for the example you want to run:
+3. Install common dependencies first:
    ```
-   cd 01-basic-chat
+   cd common
    npm install
    ```
-4. Start the server:
+4. Then install dependencies for the example you want to run:
+   ```
+   cd ../01-basic-chat
+   npm install
+   ```
+5. Start the server:
    ```
    npm start
    ```
-5. Open http://localhost:3000 in your browser
+6. Open http://localhost:3000 in your browser
 
 If you want to use a different model, copy the `.env.example` file to `.env` and set the model name. Example:
 

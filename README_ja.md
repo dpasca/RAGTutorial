@@ -42,16 +42,21 @@ RAGTutorial/
    ollama pull qwen2.5:3b
    ollama pull nomic-embed-text
    ```
-3. 実行したい例の依存関係をインストールする：
+3. まず共通の依存関係をインストールする：
    ```
-   cd 01-basic-chat
+   cd common
    npm install
    ```
-4. サーバーを起動する：
+4. 次に実行したい例の依存関係をインストールする：
+   ```
+   cd ../01-basic-chat
+   npm install
+   ```
+5. サーバーを起動する：
    ```
    npm start
    ```
-5. ブラウザでhttp://localhost:3000を開く
+6. ブラウザでhttp://localhost:3000を開く
 
 別のモデルを使用したい場合は、`.env.example`ファイルを`.env`にコピーしてモデル名を設定してください。例：
 ```

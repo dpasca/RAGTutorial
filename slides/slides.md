@@ -30,17 +30,17 @@ style: |
 
 # Quickstart
 
-- Install **Git**, **Node.js** and **Ollama**.
-- See *Workshop Requirements*: [English](workshop_requirements_rag_en.txt) or [日本語](workshop_requirements_rag_ja.txt)
 
-| | |
-|------|---------------|
-| Clone this repo | `git clone https://github.com/dpasca/RAGTutorial.git` |
-| Get models | `ollama pull qwen2.5:3b`<br>`ollama pull nomic-embed-text` |
-| Go to a lesson | `cd 01-basic-chat` |
-| Install dependencies | `npm install` |
-| Start the server | `npm start` |
-| Open browser | `http://localhost:3000` |
+| | | |
+|---|---|---------------|
+| 1 | See the requirements | [English](workshop_requirements_rag_en.txt) or [日本語](workshop_requirements_rag_ja.txt) |
+| 2 | Clone this repo | `git clone git@github.com:dpasca/RAGTutorial.git` |
+| 3 | Get models | `ollama pull qwen2.5:3b`<br>`ollama pull nomic-embed-text` |
+| 4 | Install common dependencies | `cd common && npm install` |
+| 5 | Go to a lesson | `cd ../01-basic-chat` |
+| 6 | Install dependencies | `npm install` |
+| 7 | Start the server | `npm start` |
+| 8 | Open browser | `http://localhost:3000` |
 
 ---
 

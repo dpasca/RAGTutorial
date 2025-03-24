@@ -41,39 +41,52 @@ RAGシステムの構築と理解のためのステップバイステップガ�
 }
 ;background-color:#fff;background-image:none;" data-marpit-pagination-total="16">
 <h1 id="quickstart">Quickstart</h1>
-<ul>
-<li>Install <strong>Git</strong>, <strong>Node.js</strong> and <strong>Ollama</strong>.</li>
-<li>See <em>Workshop Requirements</em>: <a href="workshop_requirements_rag_en.txt">English</a> or <a href="workshop_requirements_rag_ja.txt">日本語</a></li>
-</ul>
 <table>
 <thead>
 <tr>
+<th></th>
 <th></th>
 <th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Clone this repo</td>
-<td><code>git clone https://github.com/dpasca/RAGTutorial.git</code></td>
+<td>1</td>
+<td>See the requirements</td>
+<td><a href="workshop_requirements_rag_en.txt">English</a> or <a href="workshop_requirements_rag_ja.txt">日本語</a></td>
 </tr>
 <tr>
+<td>2</td>
+<td>Clone this repo</td>
+<td><code>git clone git@github.com:dpasca/RAGTutorial.git</code></td>
+</tr>
+<tr>
+<td>3</td>
 <td>Get models</td>
 <td><code>ollama pull qwen2.5:3b</code><br /><code>ollama pull nomic-embed-text</code></td>
 </tr>
 <tr>
-<td>Go to a lesson</td>
-<td><code>cd 01-basic-chat</code></td>
+<td>4</td>
+<td>Install common dependencies</td>
+<td><code>cd common &amp;&amp; npm install</code></td>
 </tr>
 <tr>
+<td>5</td>
+<td>Go to a lesson</td>
+<td><code>cd ../01-basic-chat</code></td>
+</tr>
+<tr>
+<td>6</td>
 <td>Install dependencies</td>
 <td><code>npm install</code></td>
 </tr>
 <tr>
+<td>7</td>
 <td>Start the server</td>
 <td><code>npm start</code></td>
 </tr>
 <tr>
+<td>8</td>
 <td>Open browser</td>
 <td><code>http://localhost:3000</code></td>
 </tr>
