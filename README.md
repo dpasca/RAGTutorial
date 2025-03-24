@@ -9,9 +9,13 @@ This workshop provides a hands-on introduction to RAG through progressive exampl
 ## Prerequisites
 
 - Node.js installed (v14+ recommended)
-- OpenAI API key
+- Ollama installed
 - Basic familiarity with JavaScript
 - Text editor or IDE
+
+For system setup see:
+- [Workshop Requirements EN](workshop_requirements_rag_en.txt) (English)
+- [Workshop Requirements JA](workshop_requirements_rag_ja.txt) （日本語）
 
 ## Project Structure
 
@@ -24,6 +28,7 @@ RAGTutorial/
 │   ├── ADD_YOUR_OWN_DOCS_HERE.md
 │   ├── lost-signal-of-elara-7_en.md
 │   └── lost-signal-of-elara-7_ja.md
+├── slides/                       # Workshop slides
 ├── 01-basic-chat/                # Simple chat with Ollama
 ├── 02-function-calling/          # Function-calling example
 ├── 03-basic-rag/                 # Simple RAG using Ollama
@@ -33,71 +38,7 @@ RAGTutorial/
 
 ## Workshop Stages
 
-### Stage 1: Basic Chat (No RAG)
-
-**Objective:** Create a simple chat interface using OpenAI completions API.
-
-**Features:**
-- Express server with REST API
-- Basic HTML/CSS chat interface
-- Using Ollama via OpenAI API compatible endpoint
-
-**Key Concepts:**
-- Setting up an AI chat application
-- Managing API requests and responses
-
-### Stage 2: Function Calling
-
-**Objective:** Enhance the chat with function calling for movie ratings.
-
-**Features:**
-- Function definitions for the LLM
-- Movie rating (fake) database integration
-
-**Key Concepts:**
-- OpenAI function calling
-- Structuring functions for LLM use
-- Parsing and handling function responses
-
-### Stage 3: Basic RAG
-
-**Objective:** Implement the core RAG pattern from scratch.
-
-**Features:**
-- Document loading and processing
-- Vector embedding and storage
-- Context retrieval and prompt augmentation
-
-**Key Concepts:**
-- Document chunking and indexing
-- Semantic search and similarity
-- Context window management
-
-### Stage 4: Function-Based RAG Decision
-
-**Objective:** Use function-calling to intelligently decide when to use RAG.
-
-**Features:**
-- Decision function for retrieval necessity
-- Conditional RAG execution
-- Performance optimization
-
-**Key Concepts:**
-- Meta-reasoning with LLMs
-- Hybrid processing pipelines
-- Optimizing for relevance and performance
-
-### Stage 5: Agentic RAG Decision
-
-**Objective:** Use an agent to decide when to use RAG.
-
-**Features:**
-- Initial query analysis completion
-- Conditional context augmentation
-
-**Key Concepts:**
-- Multi-stage prompting
-- Building more flexible RAG systems
+See [slides/slides.html](slides/slides.html) for the workshop slides.
 
 ## Getting Started
 
@@ -138,9 +79,8 @@ EMBEDDING_MODEL_NAME=nomic-embed-text
 
 ## Contact
 
-This workshop is created by Davide Pasca.
-
-If you have any questions, please contact me at:
-
+*Davide Pasca*:
 - [davide@newtypekk.com](mailto:davide@newtypekk.com)
+- [github.com/dpasca](https://github.com/dpasca)
+- [newtypekk.com](https://newtypekk.com)
 - [x.com/109mae](https://x.com/109mae)

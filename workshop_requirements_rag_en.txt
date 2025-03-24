@@ -15,7 +15,7 @@ Please make sure you have the following software installed on your computer:
 
 3. Required AI Models:
    After installing Ollama, open a terminal/command prompt and run:
-   - `ollama pull qwen2.5:3b` (or `ollama pull qwen2.5:7b` if you have enough memory)
+   - `ollama pull qwen2.5:3b`
    - `ollama pull nomic-embed-text`
 
 4. Git:
