@@ -20,7 +20,7 @@ style: |
 <br>
 
 <div style="text-align: right; font-size: 0.8em;">by Davide Pasca</div>
-<div style="text-align: right; font-size: 0.8em;">v 1.0</div>
+<div style="text-align: right; font-size: 0.8em;">v 1.1</div>
 
 <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 0.8em;">
 <a href="https://github.com/dpasca/RAGTutorial">https://github.com/dpasca/RAGTutorial</a>
@@ -223,6 +223,19 @@ Search results are attached to the user message for the benefit of the user-faci
 <div style="display: flex; justify-content: center; align-items: center;">
   <img src="images/rag_arch_agent.png" alt="RAG Architecture" style="max-width: 100%; height: auto;">
 </div>
+
+---
+
+# What we didn't cover...
+
+- Disk storage for very large datasets
+  非常に大きなデータセットのためのディスクストレージ
+- Scraping (often data is not ready-to-use)
+  スクレイピング（データがすぐに使える状態でないことが多い）
+- Better optimization of chat history
+  チャット履歴のより良い最適化
+- Dedicated RAG libraries (e.g. LLamaIndex, LangChain)
+  専用のRAGライブラリ（例：LLamaIndex、LangChain）
 
 ---
 
