@@ -2,6 +2,8 @@
 
 A step-by-step tutorial for building and understanding Retrieval-Augmented Generation (RAG) systems using Node.js.
 
+**[日本語版はこちらをご覧ください](README_ja.md)** | **[View in Japanese](README_ja.md)**
+
 ## Overview
 
 This workshop provides a hands-on introduction to RAG through progressive examples, from a basic chat application to sophisticated retrieval systems. Designed for beginners, it can be completed in approximately 1.5 hours.
