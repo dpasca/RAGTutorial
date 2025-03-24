@@ -8,6 +8,7 @@ backgroundColor: #fff
 # Retrieval-Augmented Generation (RAG) Workshop
 
 A step-by-step guide to building and understanding RAG systems
+RAGシステムの構築と理解のためのステップバイステップガイド
 
 by Davide Pasca
 
@@ -20,63 +21,64 @@ by Davide Pasca
 **Retrieval-Augmented Generation (RAG)**:
 
 - Fast fuzzy search + LLM intelligence
-- <Insert-Japanese-translation>
+- 高速なあいまい検索とLLMの知能
 
 **Benefits:**
 - Extends knowledge of LLM to any document database
-- <Insert-Japanese-translation>
+- LLMの知識を任意のドキュメントデータベースに拡張
 - Language model can be small
-- <Insert-Japanese-translation>
+- 言語モデルは小さくても良い
 - Reliable responses (can mention sources)
-- <Insert-Japanese-translation>
+- 信頼性のある応答（ソースを言及可能）
 
 ---
 
 # Workshop Overview
 
 A progressive approach to understanding and implementing RAG:
+RAGを理解し実装するための段階的アプローチ
 
-1. **Basic Chat** - Simple AI chat (no RAG) (<Insert-Japanese-translation>)
-2. **Function Calling** - AI chat with function-calling (<Insert-Japanese-translation>)
-3. **Basic RAG** - Basic RAG pattern (<Insert-Japanese-translation>)
-4. **Function-Based RAG Decision** - RAG with function-calling (<Insert-Japanese-translation>)
-5. **Agentic RAG Decision** - RAG with agents (<Insert-Japanese-translation>)
+1. **Basic Chat** - Simple AI chat (no RAG) (基本的なチャット - シンプルなAIチャット（RAGなし）)
+2. **Function Calling** - AI chat with function-calling (関数呼び出し付きAIチャット)
+3. **Basic RAG** - Basic RAG pattern (基本的なRAGパターン)
+4. **Function-Based RAG Decision** - RAG with function-calling (関数呼び出しを用いたRAG)
+5. **Agentic RAG Decision** - RAG with agents (エージェントを用いたRAG)
 
 ---
 
 # Stage 1: Basic Chat
 
 **Objective:** Create a simple chat interface using OpenAI API
-
-<!-- ![bg right:40% 90%](https://source.unsplash.com/rH8O0FHFpfw) -->
+シンプルなチャットインターフェースをOpenAI APIを使用して作成する
 
 **Features:**
-- Chat with Express server and REST API (<Insert-Japanese-translation>)
-- Using Ollama via OpenAI API compatible endpoint (<Insert-Japanese-translation>)
+- Chat with Express server and REST API - ExpressサーバーとREST APIでのチャット
+- Using Ollama via OpenAI API compatible endpoint (OpenAI API互換エンドポイントを介したOllamaの使用)
 
 **Key Concepts:**
-- De-facto standard "completions" API by OpenAI (<Insert-Japanese-translation>)
-- Access to Ollama models via this endpoint (<Insert-Japanese-translation>)
+- De-facto standard "completions" API by OpenAI (OpenAIによる事実上の標準「completions」API)
+- Access to Ollama models via this endpoint (このエンドポイントを通じたOllamaモデルへのアクセス)
 ---
 
 # Stage 1: Basic Chat (continued)
 
 1. Create a list of messages between "user" and "assistant"
-  <Insert-Japanese-translation>
+  「ユーザー」と「アシスタント」の間のメッセージリストを作成
 2. On user input, add new "user" messages to the history
-  <Insert-Japanese-translation>
+  ユーザー入力時に新しい「ユーザー」メッセージを履歴に追加
 3. Call Completions API with all messages
-  <Insert-Japanese-translation>
+  すべてのメッセージでCompletions APIを呼び出す
 4. Get "assistant" response and add it to the history
-  <Insert-Japanese-translation>
+  「アシスタント」の応答を取得して履歴に追加
 5. Wait for next user input and repeat...
-  <Insert-Japanese-translation>
+  次のユーザー入力を待って繰り返す...
 
 ---
 
 # Stage 2: Function Calling
 
 **Objective:** Enhance the chat with function calling capabilities
+関数呼び出し機能を備えたチャットを強化する
 
 ```javascript
 // Define a function for the LLM to call
@@ -106,6 +108,7 @@ const getMovieRatingFunction = {
 # Stage 3: Basic RAG
 
 **Objective:** Implement the core RAG pattern from scratch
+コアRAGパターンをゼロから実装する
 
 ![bg right:40% 80%](https://source.unsplash.com/OQMZwNd3ThU)
 
@@ -124,6 +127,7 @@ const getMovieRatingFunction = {
 # Stage 4: Function-Based RAG Decision
 
 **Objective:** Use function-calling to intelligently decide when to use RAG
+関数呼び出しを使用してRAGを使用するタイミングをインテリジェントに決定する
 
 ```javascript
 // Define RAG search tool
@@ -153,6 +157,7 @@ const searchKnowledgeBaseFunction = {
 # Stage 5: Agentic RAG Decision
 
 **Objective:** Use an agent to decide when to use RAG
+エージェントを使用してRAGを使用するタイミングを決定する
 
 ![bg right:40% 80%](https://source.unsplash.com/ipARHaxETRk)
 
@@ -183,13 +188,20 @@ const searchKnowledgeBaseFunction = {
 </div>
 
 Our sample document "The Lost Signal of Elara-7" demonstrates how RAG enhances LLM responses:
+サンプルドキュメント「The Lost Signal of Elara-7」は、RAGがLLMの応答をどのように強化するかを示しています：
 
 - Without RAG: Generic responses based on training data
+  RAGなし：トレーニングデータに基づく一般的な応答
 - With RAG: Specific responses incorporating details about:
+  RAGあり：以下の詳細を組み込んだ具体的な応答：
   - Mining colony on Elara-7
+    エララ-7の採掘コロニー
   - Chief Engineer Mara Kade's last message
+    チーフエンジニアのマラ・ケイドの最後のメッセージ
   - The mysterious crystalline structures
+    神秘的な結晶構造
   - The Icarus Dawn investigation team
+    イカロス・ドーン調査チーム
 
 ---
 
