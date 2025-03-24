@@ -1,0 +1,14 @@
+flowchart LR
+    %% Initial Call
+    A[User Message] --> B[LLM with<br/>Function Names]:::secondary
+
+    %% Function Selection
+    B --> C{LLM Decides<br/>Function to Call?}:::decision
+
+    %% Direct Response Path
+    C -->|No| F[Final Response]:::quaternary
+
+    %% Function Calling Path
+    C -->|Yes| D[Execute Function]:::tertiary
+    D --> E[LLM with<br/>Function Results]:::quaternary
+    E --> F

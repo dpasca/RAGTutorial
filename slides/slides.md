@@ -3,6 +3,11 @@ marp: true
 theme: default
 paginate: true
 backgroundColor: #fff
+style: |
+  section {
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+  }
 ---
 
 # Retrieval-Augmented Generation (RAG) Workshop
@@ -15,7 +20,7 @@ backgroundColor: #fff
 <br>
 
 <div style="text-align: right; font-size: 0.8em;">by Davide Pasca</div>
-<div style="text-align: right; font-size: 0.8em;">v 0.1</div>
+<div style="text-align: right; font-size: 0.8em;">v 1.0</div>
 
 <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 0.8em;">
 <a href="https://github.com/dpasca/RAGTutorial">https://github.com/dpasca/RAGTutorial</a>
@@ -186,8 +191,10 @@ With basic RAG, every user message is used to search the database. Search result
 
 It's just regular function-calling, but the function that we provide is a *search function*.
 通常の関数呼び出しですが、提供する関数は*検索関数*です。
-We can have multiple search functions. e.g. `search_recipes`, `search_legal_documents`, etc.
-複数の検索関数を持つことができます。例：`search_recipes`、`search_legal_documents`など。
+We can have multiple search functions:
+複数の検索関数を持つことができます：
+ - e.g. `search_recipes`, `search_legal_documents`, etc.
+   例：`search_recipes`、`search_legal_documents`など。
 
 ---
 

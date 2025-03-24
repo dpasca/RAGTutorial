@@ -12,9 +12,9 @@
   "flowchart": {
     "htmlLabels": true,
     "curve": "basis",
-    "diagramPadding": 10,
+    "diagramPadding": 5,
     "nodeSpacing": 50,
-    "rankSpacing": 70,
+    "rankSpacing": 30,
     "cornerRadius": 10
   },
   "themeCSS": "* { font-family: Arial, sans-serif; } .node rect, .node circle, .node ellipse, .node polygon, .node path { fill: #D0E0FF; stroke: #3367D6; stroke-width: 2px; rx: 10; ry: 10; } .node.secondary rect, .node.secondary circle, .node.secondary ellipse, .node.secondary polygon { fill: #D0F0D0; stroke: #0F9D58; stroke-width: 2px; } .node.tertiary rect, .node.tertiary circle, .node.tertiary ellipse, .node.tertiary polygon { fill: #FFF0D0; stroke: #F9AB00; stroke-width: 2px; } .node.quaternary rect, .node.quaternary circle, .node.quaternary ellipse, .node.quaternary polygon { fill: #FFD0D0; stroke: #C5221F; stroke-width: 2px; } .edgePath .path { stroke: #5A87D6; stroke-width: 2px; } .node.decision polygon { fill: #FFF0D0 !important; stroke: #F9AB00 !important; stroke-width: 2px; } .label { font-weight: 500; font-size: 14px; }"

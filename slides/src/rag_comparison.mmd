@@ -1,9 +1,16 @@
+%%{init: {'flowchart': {'rankSpacing': 30}}}%%
 flowchart LR
-    %% Traditional LLM Path
-    A1[User Query] --> B1[LLM]:::secondary
-    B1 --> C1[Response Limited to<br/>Training Data]:::secondary
-
     %% RAG-Enhanced LLM Path
-    A2[User Query] --> B2[Context Retrieval]:::tertiary
-    B2 --> C2[LLM<br/>+<br/>Relevant Context]:::tertiary
-    C2 --> D2[Response Extented with<br/>Extra Knowledge]:::quaternary
+    subgraph RAG-Enhanced LLM
+        direction LR
+        A2[User Query] --> B2[Context Retrieval]:::tertiary
+        B2 --> C2[LLM<br/>+<br/>Relevant Context]:::tertiary
+        C2 --> D2[Response Extented with<br/>Extra Knowledge]:::quaternary
+    end
+
+    %% Traditional LLM Path
+    subgraph Traditional LLM
+        direction LR
+        A1[User Query] --> B1[LLM]:::secondary
+        B1 --> C1[Response Limited to<br/>Training Data]:::secondary
+    end
