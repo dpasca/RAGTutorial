@@ -20,15 +20,15 @@ by Davide Pasca
 **Retrieval-Augmented Generation (RAG)**:
 
 - Fast fuzzy search + LLM intelligence
-- <Add Japanese>
+- <Insert-Japanese-translation>
 
 **Benefits:**
 - Extends knowledge of LLM to any document database
-- <Add Japanese>
+- <Insert-Japanese-translation>
 - Language model can be small
-- <Add Japanese>
+- <Insert-Japanese-translation>
 - Reliable responses (can mention sources)
-- <Add Japanese>
+- <Insert-Japanese-translation>
 
 ---
 
@@ -36,11 +36,11 @@ by Davide Pasca
 
 A progressive approach to understanding and implementing RAG:
 
-1. **Basic Chat** - Simple AI chat (no RAG) (<Add Japanese>)
-2. **Function Calling** - AI chat with function-calling (<Add Japanese>)
-3. **Basic RAG** - Basic RAG pattern (<Add Japanese>)
-4. **Function-Based RAG Decision** - RAG with function-calling (<Add Japanese>)
-5. **Agentic RAG Decision** - RAG with agents (<Add Japanese>)
+1. **Basic Chat** - Simple AI chat (no RAG) (<Insert-Japanese-translation>)
+2. **Function Calling** - AI chat with function-calling (<Insert-Japanese-translation>)
+3. **Basic RAG** - Basic RAG pattern (<Insert-Japanese-translation>)
+4. **Function-Based RAG Decision** - RAG with function-calling (<Insert-Japanese-translation>)
+5. **Agentic RAG Decision** - RAG with agents (<Insert-Japanese-translation>)
 
 ---
 
@@ -51,26 +51,26 @@ A progressive approach to understanding and implementing RAG:
 <!-- ![bg right:40% 90%](https://source.unsplash.com/rH8O0FHFpfw) -->
 
 **Features:**
-- Chat with Express server and REST API (<Add Japanese>)
-- Using Ollama via OpenAI API compatible endpoint (<Add Japanese>)
+- Chat with Express server and REST API (<Insert-Japanese-translation>)
+- Using Ollama via OpenAI API compatible endpoint (<Insert-Japanese-translation>)
 
 **Key Concepts:**
-- De-facto standard "completions" API by OpenAI (<Add Japanese>)
-- Access to Ollama models via this endpoint (<Add Japanese>)
+- De-facto standard "completions" API by OpenAI (<Insert-Japanese-translation>)
+- Access to Ollama models via this endpoint (<Insert-Japanese-translation>)
 ---
 
 # Stage 1: Basic Chat (continued)
 
 1. Create a list of messages between "user" and "assistant"
-  <Add Japanese>
+  <Insert-Japanese-translation>
 2. On user input, add new "user" messages to the history
-  <Add Japanese>
+  <Insert-Japanese-translation>
 3. Call Completions API with all messages
-  <Add Japanese>
+  <Insert-Japanese-translation>
 4. Get "assistant" response and add it to the history
-  <Add Japanese>
+  <Insert-Japanese-translation>
 5. Wait for next user input and repeat...
-  <Add Japanese>
+  <Insert-Japanese-translation>
 
 ---
 
