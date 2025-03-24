@@ -162,8 +162,8 @@ With basic RAG, every user message is used to search the database. Search result
   多くの不要なRAGアクセス（例：「Hello」のRAG検索は不要）
 - Small Language Models get distracted by unnecessary context added by RAG
   小型言語モデルはRAGによって追加された不要なコンテキストに気を取られる
-- Search of user query may not be enough (user asks *"car that won't start"*, but database has *"car ignition problems"* entry)
-  ユーザーのクエリ検索が不十分な場合がある（ユーザーが「エンジンがかからない車」と尋ねても、データベースには「車の点火問題」のエントリがある）
+- Search of direct user query may not be enough (user message is *"car that won't start"*, but search should be *"car ignition problems"*)
+  ユーザーの直接的なクエリの検索では不十分な場合がある（ユーザーメッセージが「車が始動しない」の場合、検索は「車の点火問題」であるべき）
 
 ---
 
