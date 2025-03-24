@@ -1,0 +1,7 @@
+{
+        "html": true,
+        "allowLocalFiles": true,
+        "preview": true,
+        "output": "slides.html",
+        "self-contained": true
+    }

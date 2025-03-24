@@ -40,7 +40,7 @@ RAGTutorial/
 
 ## Workshop Stages
 
-See [slides/slides.html](slides/slides.html) for the workshop slides.
+See [slides/slides.pdf](slides/slides.pdf) for the workshop slides.
 
 ## Getting Started
 

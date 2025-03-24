@@ -33,7 +33,7 @@ RAGTutorial/
 ```
 
 ## ワークショップの段階
-ワークショップのスライドについては[slides/slides.html](slides/slides.html)を参照してください。
+ワークショップのスライドについては[slides/slides.pdf](slides/slides.pdf)を参照してください。
 
 ## 始め方
 1. このリポジトリをクローンする
